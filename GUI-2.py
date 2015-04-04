@@ -6,6 +6,7 @@ import random
 
 pygame.init()
 background_colour = (255,255,255)
+black = (0,0,0)
 display_width = 800
 display_height = 500
 ennemy_width = 35
@@ -17,16 +18,22 @@ clock = pygame.time.Clock()
 
 ennemy = pygame.image.load("assets/square.png")
 ship = pygame.image.load("assets/square.png")
+e_bullet = pygame.image.load("assets/rsquare.png")
 
 def hit():
-	message_display("You've been hit!")
+	# message_display("You've been hit!")
+	font = pygame.font.Font(None, 36)		
+	text = font.render("Hello There", 1, (10, 10, 10))
+	textpos = text.get_rect()
+	textpos.centerx = screen.get_rect().centerx
+	screen.blit(text, textpos)
 
 def text_objects(text, font):
-	textSurface = font.render(text, true, black)
+	textSurface = font.render(text, 1, black)
 	return textSurface, textSurface.get_rect()
 
 def message_display(text):
-	hitText = pygame.font.Font('freesansbold.ttf', 115)
+	hitText = pygame.font.Font(None, 115)
 	TextSurf, TextRect = text_objects(text, hitText)
 	TextRect.center = ((display_width/2), (display_height/2))
 	screen.blit(TextSurface, TextRect)
@@ -42,6 +49,14 @@ def print_ship(x,y):
 
 def print_shot(x,y):
 	screen.blit(ship, (x,y))
+
+def print_e_shot(x,y):
+	screen.blit(e_bullet, (x,y))
+
+def collision(rx, ry, x, y, ennemy_width):
+	if rx < x + ennemy_width and rx > x:
+		if ry < y + ennemy_width and ry > y:
+			return True
 
 def game_loop():
 	x=display_width/2
@@ -95,8 +110,9 @@ def game_loop():
 				ry = ennemyy
 				onscreen = True
 		if onscreen:
-			print "hi"
 			ry += dis
+			if collision(rx, ry, x, y, ennemy_width):
+				hit()
 			if ry >= display_height:
 				onscreen = False
 
@@ -117,7 +133,7 @@ def game_loop():
 			print "ok"
 			print_shot(shotx, shoty)
 		if onscreen:
-			print_shot(rx, ry)
+			print_e_shot(rx, ry)
 		print_ennemy(ennemyx, ennemyy)
 		print_ship(x,y)
 		pygame.display.update()
