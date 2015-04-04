@@ -8,7 +8,7 @@ pygame.init()
 background_colour = (255,255,255)
 display_width = 800
 display_height = 600
-ennemy_width = 35
+
 
 screen = pygame.display.set_mode((display_width, display_width))
 pygame.display.set_caption('Tutorial 1')
@@ -16,7 +16,7 @@ screen.fill(background_colour)
 clock = pygame.time.Clock()
 
 ennemy = pygame.image.load("assets/square.png")
-ship = pygame.image.load("assets/square2.png")
+ship = pygame.image.load("assets/square.png")
 def hit():
 	message_display("You've been hit!")
 
@@ -33,22 +33,52 @@ def message_display(text):
 	time.sleep(2)
 	game_loop()
 
+class EnnemyShip:
+	number_of_ships=0
+	ennemy_width = 35
+	y=20
+
+	def __init__(self):
+		self.direction=1
+		self.x=10+EnnemyShip.ennemy_width*EnnemyShip.number_of_ships
+		EnnemyShip.number_of_ships+=1
+		self.number=EnnemyShip.number_of_ships
+		if EnnemyShip.number_of_ships>=1:
+			self.x+=5*EnnemyShip.number_of_ships
+	def move(self,dist):
+		if self.direction==1: 
+			dist = 5
+			self.x += self.direction*dist
+	  		if self.x >= display_width-50 and self.number==EnnemyShip.number_of_ships:
+	  			self.direction = -1
+	  		elif self.x >= display_width-50-(EnnemyShip.ennemy_width+5)*(EnnemyShip.number_of_ships-self.number):
+	  			self.direction = -1
+
+		if self.direction == -1:
+			dist = 5
+			self.x += self.direction*dist
+	  		if self.x <= (EnnemyShip.ennemy_width+5)*self.number:
+	  		  self.direction = 1
+
 def print_ennemy(x,y):
 	screen.blit(ennemy, (x,y))
 
 def print_ship(x,y):
 	screen.blit(ship, (x,y))
-
 def game_loop():
 	x=display_width/2
 	y=display_height-40
-	ennemyx=10
-	ennemyy=20
 	dist = 0
 	direction = 1
 	dist_ship = 0
 
 	running = True;
+	one= EnnemyShip()
+	two=EnnemyShip()
+	three=EnnemyShip()
+	four=EnnemyShip()
+
+	Ennemies=[one,two,three,four]
 	while running:
 		#Ship
 		for event in pygame.event.get():
@@ -64,21 +94,14 @@ def game_loop():
 					dist_ship = 0
 		x += dist_ship	
 
-		#Ennemies	
-		if direction==1: 
-			dist = 5
-			ennemyx += direction*dist
-	  		if ennemyx >= display_width-ennemy_width:
-	  		  direction = -1
-
-		if direction == -1:
-			dist = 5
-			ennemyx += direction*dist
-	  		if ennemyx <= 0:
-	  		  direction = 1
+		
 
 		screen.fill(background_colour)
-		print_ennemy(ennemyx, ennemyy)
+		for z in Ennemies:
+			z.move(dist)
+			print str(z.number)+": "+str(z.x)
+			print_ennemy(z.x,EnnemyShip.y)
+		
 		print_ship(x,y)
 		pygame.display.update()
 		clock.tick(60)	
