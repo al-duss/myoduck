@@ -7,16 +7,17 @@ import random
 pygame.init()
 background_colour = (255,255,255)
 display_width = 800
-display_height = 600
+display_height = 500
 
 
-screen = pygame.display.set_mode((display_width, display_width))
+screen = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption('Tutorial 1')
 screen.fill(background_colour)
 clock = pygame.time.Clock()
 
 ennemy = pygame.image.load("assets/square.png")
 ship = pygame.image.load("assets/square.png")
+
 def hit():
 	message_display("You've been hit!")
 
@@ -65,12 +66,18 @@ def print_ennemy(x,y):
 
 def print_ship(x,y):
 	screen.blit(ship, (x,y))
+
+
+def print_shot(x,y):
+	screen.blit(ship, (x,y))
+
 def game_loop():
 	x=display_width/2
 	y=display_height-40
 	dist = 0
 	direction = 1
 	dist_ship = 0
+
 
 	running = True;
 	one= EnnemyShip()
@@ -79,6 +86,12 @@ def game_loop():
 	four=EnnemyShip()
 
 	Ennemies=[one,two,three,four]
+
+	shot_counter =0
+	running = True
+	shot = False
+	onscreen = False
+	dis = 5
 	while running:
 		#Ship
 		for event in pygame.event.get():
@@ -89,18 +102,50 @@ def game_loop():
 					dist_ship = -5
 				elif event.key == pygame.K_RIGHT:
 					dist_ship = 5
+				elif event.key == pygame.K_SPACE:
+					shot=True
 			if event.type == pygame.KEYUP:
 				if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
 					dist_ship = 0
-		x += dist_ship	
+
+		if (x+dist_ship) >= 0 and (x+dist_ship) <= (display_width - EnnemyShip.ennemy_width) :
+			x += dist_ship	
+
+		#Shots from ship
+		if shot:
+			if shot_counter ==0:
+				shotx = x
+				shoty = y
+				shot_counter +=1
+			else:
+				shoty += -5
+				if shoty<=0:
+					shot = False;
+					shot_counter=0
+
+		#Shots
+		if random.randint(0,40)==6:
+			if not onscreen:
+				rx = Ennemies[0].x
+				ry = EnnemyShip.y
+				onscreen = True
+		if onscreen:
+			ry += dis
+			if ry >= display_height:
+				onscreen = False
 
 		
 
 		screen.fill(background_colour)
 		for z in Ennemies:
 			z.move(dist)
-			print str(z.number)+": "+str(z.x)
 			print_ennemy(z.x,EnnemyShip.y)
+		
+		
+		if shot:
+			print_shot(shotx, shoty)
+		if onscreen:
+			print_shot(rx, ry)
 		
 		print_ship(x,y)
 		pygame.display.update()
