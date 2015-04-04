@@ -8,7 +8,7 @@ pygame.init()
 background_colour = (255,255,255)
 display_width = 800
 display_height = 500
-ennemy_width = 35
+
 
 screen = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption('Tutorial 1')
@@ -34,11 +34,39 @@ def message_display(text):
 	time.sleep(2)
 	game_loop()
 
+class EnnemyShip:
+	number_of_ships=0
+	ennemy_width = 35
+	y=20
+
+	def __init__(self):
+		self.direction=1
+		self.x=10+EnnemyShip.ennemy_width*EnnemyShip.number_of_ships
+		EnnemyShip.number_of_ships+=1
+		self.number=EnnemyShip.number_of_ships
+		if EnnemyShip.number_of_ships>=1:
+			self.x+=5*EnnemyShip.number_of_ships
+	def move(self,dist):
+		if self.direction==1: 
+			dist = 5
+			self.x += self.direction*dist
+	  		if self.x >= display_width-50 and self.number==EnnemyShip.number_of_ships:
+	  			self.direction = -1
+	  		elif self.x >= display_width-50-(EnnemyShip.ennemy_width+5)*(EnnemyShip.number_of_ships-self.number):
+	  			self.direction = -1
+
+		if self.direction == -1:
+			dist = 5
+			self.x += self.direction*dist
+	  		if self.x <= (EnnemyShip.ennemy_width+5)*self.number:
+	  		  self.direction = 1
+
 def print_ennemy(x,y):
 	screen.blit(ennemy, (x,y))
 
 def print_ship(x,y):
 	screen.blit(ship, (x,y))
+
 
 def print_shot(x,y):
 	screen.blit(ship, (x,y))
@@ -46,11 +74,19 @@ def print_shot(x,y):
 def game_loop():
 	x=display_width/2
 	y=display_height-40
-	ennemyx=10
-	ennemyy=20
 	dist = 0
 	direction = 1
 	dist_ship = 0
+
+
+	running = True;
+	one= EnnemyShip()
+	two=EnnemyShip()
+	three=EnnemyShip()
+	four=EnnemyShip()
+
+	Ennemies=[one,two,three,four]
+
 	shot_counter =0
 	running = True
 	shot = False
@@ -72,7 +108,7 @@ def game_loop():
 				if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
 					dist_ship = 0
 
-		if ((x+dist_ship) >= 0 and (x+dist_ship)) <= (display_width - ennemy_width) :
+		if (x+dist_ship) >= 0 and (x+dist_ship) <= (display_width - EnnemyShip.ennemy_width) :
 			x += dist_ship	
 
 		#Shots from ship
@@ -90,35 +126,27 @@ def game_loop():
 		#Shots
 		if random.randint(0,40)==6:
 			if not onscreen:
-				print "hello"
-				rx = ennemyx
-				ry = ennemyy
+				rx = Ennemies[0].x
+				ry = EnnemyShip.y
 				onscreen = True
 		if onscreen:
-			print "hi"
 			ry += dis
 			if ry >= display_height:
 				onscreen = False
 
-		#Ennemies	
-		if direction==1: 
-			dist = 5
-			ennemyx += direction*dist
-	  		if ennemyx >= display_width-ennemy_width:
-	  		  direction = -1
+		
 
-		if direction == -1:
-			dist = 5
-			ennemyx += direction*dist
-	  		if ennemyx <= 0:
-	  		  direction = 1
 		screen.fill(background_colour)
+		for z in Ennemies:
+			z.move(dist)
+			print_ennemy(z.x,EnnemyShip.y)
+		
+		
 		if shot:
-			print "ok"
 			print_shot(shotx, shoty)
 		if onscreen:
 			print_shot(rx, ry)
-		print_ennemy(ennemyx, ennemyy)
+		
 		print_ship(x,y)
 		pygame.display.update()
 		clock.tick(60)	
