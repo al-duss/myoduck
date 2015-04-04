@@ -13,6 +13,7 @@ img = pictures_path("square.png")
 imgx=0
 imgy=20
 dist = 0
+direction = 1
 screen.blit(img, (imgx, imgy))
 pygame.display.flip()
 FPS = 30
@@ -46,21 +47,25 @@ running = True
  #  	screen.fill(background_colour)
  #  	fpsTime.tick(FPS)
 while running:
-	while imgx < 255: 
+	if direction==1: 
 		dist = 10
-		imgx += dist
+		imgx += direction*dist
 		screen.blit(img, (imgx, imgy))
   		pygame.display.update()
   		screen.fill(background_colour)
   		fpsTime.tick(FPS)
+  		if imgx >= 255:
+  		  direction = -1
 
-	while imgx > 255: 
+	if direction == -1:
 		dist = 10
-		imgx -= dist
+		imgx += direction*dist
 		screen.blit(img, (imgx, imgy))
   		pygame.display.update()
   		screen.fill(background_colour)
   		fpsTime.tick(FPS)
+  		if imgx <= 0:
+  		  direction = 1
 running=False
 
 
