@@ -16,9 +16,16 @@ pygame.display.set_caption('Tutorial 1')
 screen.fill(background_colour)
 clock = pygame.time.Clock()
 
-ennemy = pygame.image.load("assets/square.png")
-ship = pygame.image.load("assets/square.png")
-e_bullet = pygame.image.load("assets/rsquare.png")
+ennemy = pygame.image.load("assets/fox.png")
+ennemy = pygame.transform.scale(ennemy, (64, 64))
+player = pygame.image.load("assets/duck.png")
+player = pygame.transform.scale(player, (64, 64))
+p_shot = pygame.image.load("assets/bubbles.png")
+p_shot = pygame.transform.scale(p_shot,(70,70))
+e_shot = pygame.image.load("assets/fireball.png")
+e_shot = pygame.transform.scale(e_shot,(55,90))
+background = pygame.image.load("assets/bg.png")
+background = pygame.transform.scale(background, (display_width, display_height))
 
 def hit():
 	# message_display("You've been hit!")
@@ -71,15 +78,17 @@ class EnnemyShip:
 def print_ennemy(x,y):
 	screen.blit(ennemy, (x,y))
 
-def print_ship(x,y):
-	screen.blit(ship, (x,y))
-
+def print_player(x,y):
+	screen.blit(player, (x,y))
 
 def print_shot(x,y):
-	screen.blit(ship, (x,y))
+	screen.blit(p_shot, (x,y))
 
 def print_e_shot(x,y):
-	screen.blit(e_bullet, (x,y))
+	screen.blit(e_shot, (x,y))
+
+def print_background():
+	screen.blit(background, (0,0))
 
 def collision(rx, ry, x, y, ennemy_width):
 	if rx < x + ennemy_width and rx > x:
@@ -88,7 +97,7 @@ def collision(rx, ry, x, y, ennemy_width):
 
 def game_loop():
 	x=display_width/2
-	y=display_height-40
+	y=display_height-70
 	dist = 0
 	direction = 1
 	dist_ship = 0
@@ -153,7 +162,8 @@ def game_loop():
 
 		
 
-		screen.fill(background_colour)
+		# screen.fill(background_colour)
+		print_background()
 		for z in Ennemies:
 			z.move(dist)
 			print_ennemy(z.x,EnnemyShip.y)
@@ -164,7 +174,7 @@ def game_loop():
 		if onscreen:
 			print_e_shot(rx, ry)
 
-		print_ship(x,y)
+		print_player(x,y)
 		pygame.display.update()
 		clock.tick(60)	
 		
