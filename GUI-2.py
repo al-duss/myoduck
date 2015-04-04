@@ -9,6 +9,9 @@ background_colour = (255,255,255)
 black = (0,0,0)
 display_width = 800
 display_height = 500
+bubbles_width=70
+fireball_width=55
+
 
 
 screen = pygame.display.set_mode((display_width, display_height))
@@ -30,11 +33,17 @@ background = pygame.transform.scale(background, (display_width, display_height))
 def hit():
 	# message_display("You've been hit!")
 	font = pygame.font.Font(None, 36)		
-	text = font.render("Hello There", 1, (10, 10, 10))
+	text = font.render("Hello There!", 1, (10, 10, 10))
 	textpos = text.get_rect()
 	textpos.centerx = screen.get_rect().centerx
 	screen.blit(text, textpos)
-
+def gameOver():
+	font = pygame.font.Font(None, 36)		
+	text = font.render("Game Over!", 1, (10, 10, 10))
+	textpos = text.get_rect()
+	textpos.centerx = screen.get_rect().centerx
+	screen.blit(text, textpos)
+	pygame.time.delay(5000)
 def text_objects(text, font):
 	textSurface = font.render(text, 1, black)
 	return textSurface, textSurface.get_rect()
@@ -73,7 +82,7 @@ def game_intro():
 
 class EnnemyShip:
 	number_of_ships=0
-	ennemy_width = 35
+	ennemy_width = 64
 	y=20
 
 	def __init__(self):
@@ -97,6 +106,11 @@ class EnnemyShip:
 			self.x += self.direction*dist
 	  		if self.x <= (EnnemyShip.ennemy_width+5)*self.number:
 	  		  self.direction = 1
+class Bullet:
+
+	def __init__(self,x,y):
+		self.x=x
+		self.y=y
 
 def print_ennemy(x,y):
 	screen.blit(ennemy, (x,y))
@@ -113,8 +127,8 @@ def print_e_shot(x,y):
 def print_background():
 	screen.blit(background, (0,0))
 
-def collision(rx, ry, x, y, ennemy_width):
-	if rx < x + ennemy_width and rx > x:
+def collision(rx, ry, x, y,r_width, ennemy_width):
+	if (rx < x + ennemy_width and rx > x) or (rx+r_width<x+ennemy_width and rx+r_width>x) or (rx+r_width/2<x+ennemy_width and rx+r_width/2>x):
 		if ry < y + ennemy_width and ry > y:
 			return True
 
@@ -133,14 +147,17 @@ def game_loop():
 	four=EnnemyShip()
 
 	Ennemies=[one,two,three,four]
-
+	bulletsEnnemy=[]
+	bulletsUser=[]
 	shot_counter =0
 	running = True
 	shot = False
 	onscreen = False
 	dis = 5
+	user_lives=3
 
 	game_intro()
+
 	while running:
 		#Ship
 		for event in pygame.event.get():
@@ -152,7 +169,8 @@ def game_loop():
 				elif event.key == pygame.K_RIGHT:
 					dist_ship = 5
 				elif event.key == pygame.K_SPACE:
-					shot=True
+					if(len(bulletsUser)<3):
+						bulletsUser.append(Bullet(x,y))
 			if event.type == pygame.KEYUP:
 				if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
 					dist_ship = 0
@@ -161,29 +179,9 @@ def game_loop():
 			x += dist_ship	
 
 		#Shots from ship
-		if shot:
-			if shot_counter ==0:
-				shotx = x
-				shoty = y
-				shot_counter +=1
-			else:
-				shoty += -5
-				if shoty<=0:
-					shot = False;
-					shot_counter=0
-
+		
 		#Shots
-		if random.randint(0,40)==6:
-			if not onscreen:
-				rx = Ennemies[0].x
-				ry = EnnemyShip.y
-				onscreen = True
-		if onscreen:
-			ry += dis
-			if collision(rx, ry, x, y, EnnemyShip.ennemy_width):
-				hit()
-			if ry >= display_height:
-				onscreen = False
+		
 
 		
 
@@ -192,12 +190,41 @@ def game_loop():
 		for z in Ennemies:
 			z.move(dist)
 			print_ennemy(z.x,EnnemyShip.y)
+
+		if random.randint(0,40)==6:
+			bulletsEnnemy.append(Bullet(Ennemies[random.randint(0,len(Ennemies)-1)].x,EnnemyShip.y))
+
+		for bullets in bulletsEnnemy:
+			bullets.y+=dis
+			if collision(bullets.x, bullets.y, x, y,fireball_width, EnnemyShip.ennemy_width):
+				hit()
+				bulletsEnnemy.remove(bullets)
+				user_lives-=1
+			if bullets.y <= display_height:
+				print_e_shot(bullets.x,bullets.y)
+			else:
+				bulletsEnnemy.remove(bullets)
 		
+		for bullets in bulletsUser:
+			bullets.y-=dis
+			if bullets.y >= 0:
+				print_shot(bullets.x,bullets.y)
+			else:
+				bulletsUser.remove(bullets)
+			for bulletsOpp in bulletsEnnemy:
+				if collision(bullets.x, bullets.y, bulletsOpp.x, bulletsOpp.y, bubbles_width, fireball_width):
+					bulletsEnnemy.remove(bulletsOpp)
+					bulletsUser.remove(bullets)
+			for ennemies in Ennemies:
+				if collision(bullets.x, bullets.y, ennemies.x, ennemies.y,bubbles_width, EnnemyShip.ennemy_width):
+					Ennemies.remove(ennemies)
+
+
 		
-		if shot:
-			print_shot(shotx, shoty)
-		if onscreen:
-			print_e_shot(rx, ry)
+		if(len(Ennemies)<1 or user_lives<1):
+			gameOver()
+			running=False
+
 
 		print_player(x,y)
 		pygame.display.update()
