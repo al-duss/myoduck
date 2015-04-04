@@ -25,28 +25,29 @@ LEFT='left'
 RIGHT='right'
 
 def main():
-	global FPSCLOCK, DISPLAYSURF, BASICFONT, NEW_SURF, NEW_RECT
+	global FPSCLOCK, DISPLAYSURF, BASICFONT, GAMESTATE
+
 	pygame.init()
 	FPSCLOCK = pygame.time.Clock()
 	DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH,WINDOWHEIGHT))
 	pygame.display.set_caption('DUCKY BATTLE')
 	fontObj = pygame.font.Font('freesansbold.ttf', BASICFONTSIZE)
-	textSurfaceObj = fontObj.render('DUCKIES WILL BATTLE!', True, GREEN, BLUE)
-	textRectObj = textSurfaceObj.get_rect()
-	textRectObj.center = (250,250)
-	p1 = Player()
+
+	game_intro()
+	while True:
+		runGame()
+		showGameOverScreen()
+
+def runGame():
+	p1 = Player() #Initialize the players with their units
 	p2 = Player()
-
-	NEW_SURF, NEW_RECT = makeText('New Game', SILVER, BROWNWINDOWWIDTH - 120, WINDOWHEIGHT - 60)
 	createPlayers(p1,p2)
-
+	selectedUnit = p1.unit[1]
 	while True:
 		if p1.units[0].hp < 1 and p1.units[1].hp < 1 and p1.units[2].hp < 1:
-			msg = 'Defeat!'
+			showGameOverScreen()
 		if p2.units[0].hp < 1 and p2.units[1].hp < 1 and p2.units[2].hp < 1:
-			msg = 'Victory!'
-
-		drawBoard(mainBoard, msg)
+			showVictoryScreen()
 
 		checkForQuit()
 		for event in pygame.event.get():
@@ -69,6 +70,12 @@ while True:
 			sys.exit()
 		pygame.display.update()
 '''
+class Status(Enum):
+	wait = 1
+	unitSelect = 2
+	attackSelect = 3
+	targetSelect = 4
+
 class Type(Enum):
 	fire = 1
 	water = 2
@@ -126,3 +133,35 @@ def attack(attack, target):
 	  ):
 		dmg = dmg*2
 	receiver.hp = receiver.hp - dmg
+
+def game_intro():
+
+	intro = True
+	while intro:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				quit()
+			if event.type == pygame.KEYDOWN:	
+				intro = False
+
+		screen.fill(background_colour)
+		largeText = pygame.font.Font('freesansbold.ttf',80)
+		smallText = pygame.font.Font('freesansbold.ttf',45)
+		TextSurf, TextRect = text_objects("Ducky Strikes Back", largeText)
+		TextSurf1, TextRect1 = text_objects("Press Any Key To Continue...", smallText)
+		TextRect.center = ((display_width/2),(display_height/2))
+		TextRect1.center = ((display_width/2),(display_height/2 + 150))
+		screen.blit(TextSurf, TextRect)
+		screen.blit(TextSurf1, TextRect1)
+		pygame.display.update()
+		clock.tick(15)
+
+def checkForQuit():
+	for event in pygame.event.get((QUIT, KEYUP)): # event handling loop
+		if event.type == QUIT or (event.type == KEYUP and event.key == K_ESCAPE):
+			pygame.quit()
+			sys.exit()
+
+if __name__ == '__main__':
+	main()
