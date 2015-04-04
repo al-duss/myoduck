@@ -57,6 +57,29 @@ def message_display(text):
 	time.sleep(2)
 	game_loop()
 
+def game_intro():
+
+	intro = True
+	while intro:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				quit()
+			if event.type == pygame.KEYDOWN:	
+				intro = False
+
+		screen.fill(background_colour)
+		largeText = pygame.font.Font('freesansbold.ttf',80)
+		smallText = pygame.font.Font('freesansbold.ttf',45)
+		TextSurf, TextRect = text_objects("Ducky Strikes Back", largeText)
+		TextSurf1, TextRect1 = text_objects("Press Any Key To Continue...", smallText)
+		TextRect.center = ((display_width/2),(display_height/2))
+		TextRect1.center = ((display_width/2),(display_height/2 + 150))
+		screen.blit(TextSurf, TextRect)
+		screen.blit(TextSurf1, TextRect1)
+		pygame.display.update()
+		clock.tick(15)
+
 class EnnemyShip:
 	number_of_ships=0
 	ennemy_width = 64
@@ -132,18 +155,22 @@ def game_loop():
 	onscreen = False
 	dis = 5
 	user_lives=3
+
+	game_intro()
+
 	while running:
 		#Ship
 		for event in pygame.event.get():
 			if event.type == QUIT:
 				running = False
-			if event.type == pygame.KEYDOWN:
+			if event.type == KEYDOWN:
 				if event.key == pygame.K_LEFT:
 					dist_ship = -5
 				elif event.key == pygame.K_RIGHT:
 					dist_ship = 5
 				elif event.key == pygame.K_SPACE:
-					bulletsUser.append(Bullet(x,y))
+					if(len(bulletsUser)<3):
+						bulletsUser.append(Bullet(x,y))
 			if event.type == pygame.KEYUP:
 				if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
 					dist_ship = 0
