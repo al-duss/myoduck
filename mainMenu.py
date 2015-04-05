@@ -28,12 +28,12 @@ def game_intro():
 				quit()
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_k:
-					os.system("GUI-2.py")
+					os.system("python GUI-2.py")
 				if event.key == pygame.K_m:
 
-					os.system("myoDucks.py")
+					os.system("python myoDucks.py")
 				if event.key == pygame.K_d:
-					os.system("rockPaperScissors.py")
+					os.system("python rockPaperScissors.py")
 
 		screen.fill(background_colour)
 		largeText = pygame.font.Font('freesansbold.ttf',45)

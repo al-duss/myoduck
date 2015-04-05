@@ -15,7 +15,7 @@ fireball_width=55
 
 
 screen = pygame.display.set_mode((display_width, display_height))
-pygame.display.set_caption('Tutorial 1')
+pygame.display.set_caption('Ducky Strikes Back')
 screen.fill(background_colour)
 clock = pygame.time.Clock()
 
@@ -36,13 +36,6 @@ log = pygame.transform.scale(log, (250,50))
 life = pygame.image.load("assets/life.png")
 life = pygame.transform.scale(life, (35,45))
 
-def hit():
-	# message_display("You've been hit!")
-	font = pygame.font.Font(None, 36)		
-	text = font.render("Hello There!", 1, (10, 10, 10))
-	textpos = text.get_rect()
-	textpos.centerx = screen.get_rect().centerx
-	screen.blit(text, textpos)
 def gameOver():
 	screen.fill(background_colour)
 	font = pygame.font.Font(None, 36)		
@@ -60,7 +53,45 @@ def gameOver():
 				quit()
 			if event.type == pygame.KEYDOWN:	
 				over = False
-
+def continue_next_level(user_lives):
+	font = pygame.font.Font(None, 36)		
+	text = font.render("Congratulations! Shoot to continue to next level!", 1, (10, 10, 10))																												
+	print_background()
+	screen.blit(text, (60,display_height/2))
+	if user_lives == 3:
+		print_life(125,display_height-50)
+	if user_lives >= 2:
+		print_life(75,display_height-50)
+	if user_lives >= 1:
+		print_life(25,display_height-50)
+	display_level(GAME.level)
+	print_player(display_width/2,display_height-70)
+	pygame.display.update()
+	over = True
+	while over:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				quit()
+			if event.type == pygame.KEYDOWN:	
+				over = False
+def youWin():
+	screen.fill(background_colour)
+	font = pygame.font.Font(None, 36)		
+	text = font.render("You Win! You destroyed the Fox Death Star!", 1, (10, 10, 10))
+	textpos = text.get_rect()
+	textpos.centerx = screen.get_rect().centerx
+	screen.blit(text, textpos)
+	print_vader(250,100)
+	pygame.display.update()
+	over = True
+	while over:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				quit()
+			if event.type == pygame.KEYDOWN:	
+				over = False
 def text_objects(text, font):
 	textSurface = font.render(text, 1, black)
 	return textSurface, textSurface.get_rect()
@@ -74,31 +105,13 @@ def message_display(text):
 	time.sleep(2)
 	game_loop()
 
-def game_intro():
 
-	intro = True
-	while intro:
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
-				pygame.quit()
-				quit()
-			if event.type == pygame.KEYDOWN:	
-				intro = False
-
-		screen.fill(background_colour)
-		largeText = pygame.font.Font('freesansbold.ttf',80)
-		smallText = pygame.font.Font('freesansbold.ttf',45)
-		TextSurf, TextRect = text_objects("Ducky Strikes Back", largeText)
-		TextSurf1, TextRect1 = text_objects("Press Any Key To Continue...", smallText)
-		TextRect.center = ((display_width/2),(display_height/2))
-		TextRect1.center = ((display_width/2),(display_height/2 + 150))
-		screen.blit(TextSurf, TextRect)
-		screen.blit(TextSurf1, TextRect1)
-		pygame.display.update()
-		clock.tick(15)
 class State:
 	def __init__(self):
 		self.level=1
+		self.speed=1
+		self.bulletPercentage=40
+		self.log_health=3
 GAME=State()
 class EnnemyShip:
 	number_of_ships=[0,0,0]
@@ -107,26 +120,26 @@ class EnnemyShip:
 
 
 	def __init__(self):
+		self.row=EnnemyShip.number_of_rows
 		self.direction=1
 		self.y=20+EnnemyShip.ennemy_width*EnnemyShip.number_of_rows
 		self.x=10+EnnemyShip.ennemy_width*EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]
 		EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]+=1
 		self.number=EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]
-		print self.number
 		if EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]>=1:
 			self.x+=5*EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]
 		if EnnemyShip.number_of_rows>1:
 			self.y+=5*EnnemyShip.number_of_rows
 	def move(self,dist):
 		if self.direction==1: 
-			self.x += self.direction*dist*GAME.level
-	  		if self.x >= display_width-64 and self.number==EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]:
+			self.x += self.direction*dist*GAME.speed
+	  		if self.x >= display_width-64 and self.number==EnnemyShip.number_of_ships[self.row]:
 	  			self.direction = -1
-	  		elif self.x >= display_width-64-(EnnemyShip.ennemy_width+5)*(EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]-self.number):
+	  		elif self.x >= display_width-64-(EnnemyShip.ennemy_width+5)*(EnnemyShip.number_of_ships[self.row]-self.number):
 	  			self.direction = -1
 
 		if self.direction == -1:
-			self.x += self.direction*dist*GAME.level
+			self.x += self.direction*dist*GAME.speed
 			if self.x <= 0 and self.number==1:
 	  			self.direction = 1
 	  		elif self.x <= 0+(EnnemyShip.ennemy_width+5)*(self.number-1):
@@ -168,7 +181,7 @@ def print_background():
 
 def collision(rx, ry, x, y,r_width, ennemy_width):
 	if (rx < x + ennemy_width and rx > x) or (rx+r_width<x+ennemy_width and rx+r_width>x) or (rx+r_width/2<x+ennemy_width and rx+r_width/2>x):
-		if ry < y + ennemy_width and ry > y:
+		if (ry < y + ennemy_width and ry > y) or (ry+r_width<y+ennemy_width and ry+r_width>y) or (ry+r_width/2<y+ennemy_width and ry+r_width/2>y):
 			return True
 
 def rect_collision(rx, ry, x, y,r_width, ennemy_width):
@@ -202,7 +215,6 @@ def game_loop():
 	shot_counter =0
 	running = True
 	shot = False
-	onscreen = False
 	dis = 5
 	user_lives=3
 	ennemy_y_counter=0
@@ -215,7 +227,6 @@ def game_loop():
 	logy1 = display_height-250
 	log_hit1 = 0
 
-	game_intro()
 
 	while running:
 		#Ship
@@ -247,21 +258,15 @@ def game_loop():
 
 
 		#display lives
-		if user_lives == 3:
-			print_life(125,display_height-50)
-		if user_lives >= 2:
-			print_life(75,display_height-50)
-		if user_lives >= 1:
-			print_life(25,display_height-50)
-
+		
 		#log
-		if log_hit < 3:
+		if log_hit < GAME.log_health:
 			print_log(logx,logy)
 		else:
 			logx=display_width
 			logy=display_height
 		
-		if log_hit1 < 3:
+		if log_hit1 < GAME.log_health:
 			print_log(logx1,logy1)
 		else:
 			logx1=display_width
@@ -271,18 +276,21 @@ def game_loop():
 			ennemy_y_counter+=1
 			z.move(dist)
 			print_ennemy(z.x,z.y)
+			if collision(z.x,z.y,x,y,EnnemyShip.ennemy_width,EnnemyShip.ennemy_width):
+				screen.fill(background_colour)
+				gameOver()
+				running=False
 		if ennemy_y_counter%2100==0:
 			for z in Ennemies:
 				z.move_y()
 
-		if random.randint(0,40)==6:
+		if random.randint(0,GAME.bulletPercentage)==6:
 			index=random.randint(0,len(Ennemies)-1)
 			bulletsEnnemy.append(Bullet(Ennemies[index].x,Ennemies[index].y))
 
 		for bullets in bulletsEnnemy:
 			bullets.y+=dis
 			if collision(bullets.x, bullets.y, x, y,fireball_width, EnnemyShip.ennemy_width):
-				hit()
 				bulletsEnnemy.remove(bullets)
 				user_lives-=1
 			if bullets.y <= display_height:
@@ -305,15 +313,38 @@ def game_loop():
 					Ennemies.remove(ennemies)
 			if rect_collision(bullets.x, bullets.y, logx, logy, bubbles_width, 250):
 				log_hit += 1
-				bulletsUser.remove(bullets)
+				try:
+					bulletsUser.remove(bullets)
+				except Exception:
+					print "ExceptionI"
 			if rect_collision(bullets.x, bullets.y, logx1, logy1, bubbles_width, 250):
 				log_hit1 += 1
-				bulletsUser.remove(bullets)
+				try:
+					bulletsUser.remove(bullets)
+				except Exception:
+					print "ExceptionI"
+
+		if user_lives == 3:
+			print_life(125,display_height-50)
+		if user_lives >= 2:
+			print_life(75,display_height-50)
+		if user_lives >= 1:
+			print_life(25,display_height-50)
 
 
+		display_level(GAME.level)
 
 		if len(Ennemies)<1:
+			bulletsEnnemy=[]
+			bulletsUser=[]
 			GAME.level+=1
+			logx = display_width/8
+			logy = display_height-250
+			log_hit = 0
+
+			logx1 = 3 * display_width/5
+			logy1 = display_height-250
+			log_hit1 = 0
 			EnnemyShip.number_of_ships=[0,0,0]
 			EnnemyShip.number_of_rows=0
 			one=EnnemyShip()
@@ -321,15 +352,43 @@ def game_loop():
 			three=EnnemyShip()
 			four=EnnemyShip()
 			Ennemies=[one,two,three,four]
-			if GAME.level%2==1:
-				ennemy_y_counter=0
+
+			if GAME.level>=5:
+				EnnemyShip.number_of_rows+=1
+				Ennemies.append(EnnemyShip())
+				Ennemies.append(EnnemyShip())
+			if GAME.level>=8:
+				Ennemies.append(EnnemyShip())
+				Ennemies.append(EnnemyShip())
+			if GAME.level>=11:
+				EnnemyShip.number_of_rows+=1
+				Ennemies.append(EnnemyShip())
+				Ennemies.append(EnnemyShip())
+			if GAME.level>=14:
+				Ennemies.append(EnnemyShip())
+				Ennemies.append(EnnemyShip())
+			if GAME.level>15:
+				screen.fill(background_colour)
+				youWin()
+				running=False
+			if(GAME.level%3==0 and GAME.bulletPercentage>30):
+				GAME.bulletPercentage-=2
+			elif(GAME.level%3==1 and GAME.log_health<6):
+				GAME.log_health+=1
+				
+			ennemy_y_counter=0
+			if GAME.level<15:
+				continue_next_level(user_lives)
+			x=display_width/2
+			y=display_height-70
+
 		if user_lives<1:
 			screen.fill(background_colour)
 			gameOver()
 			running=False
 
 
-		display_level(GAME.level)
+		
 		print_player(x,y)
 		pygame.display.update()
 		clock.tick(60)	

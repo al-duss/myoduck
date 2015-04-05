@@ -15,7 +15,7 @@ black = (0,0,0)
 display_width = 800
 display_height = 500
 screen = pygame.display.set_mode((display_width, display_height))
-pygame.display.set_caption('Tutorial 1')
+pygame.display.set_caption('Duck, Paper, Scissors')
 screen.fill(background_colour)
 clock = pygame.time.Clock()
 
@@ -23,15 +23,19 @@ def write_message(text, me, opponent):
     screen.fill(background_colour)
     largeText = pygame.font.Font('freesansbold.ttf',45)
     smallText = pygame.font.Font('freesansbold.ttf',30)
+    smallerText = pygame.fond.Font('freesansbold.ttf', 20)
     TextSurf, TextRect = text_objects(text, largeText)
     TextSurf2, TextRect2 = text_objects("Me: "+str(GAME.me)+", Opponent: " +str(GAME.opponent), smallText)
     TextSurf3, TextRect3 = text_objects("Duck, Paper, Scissors", largeText)
+    TextSurf4, TextRect4 = text_objects("Exit: Rotate left", smallerText)
     TextRect.center = ((display_width/2),(display_height/2))
     TextRect2.center = ((display_width/2),(display_height/2 + 150))
     TextRect3.center = ((display_width/2),40)
+    TextRect4.center = (30,display_height-20)
     screen.blit(TextSurf, TextRect)
     screen.blit(TextSurf2, TextRect2)
     screen.blit(TextSurf3, TextRect3)
+    screen.blit(TextSurf4, TextRect4)
     pygame.display.update()
     clock.tick(15)
 
@@ -48,6 +52,7 @@ class State:
     def __init__(self):
         self.me = 0
         self.opponent = 0
+        self.running=True
 GAME=State()
 
 class Listener(myo.DeviceListener):
@@ -103,6 +108,8 @@ class Listener(myo.DeviceListener):
         show_output('acceleration', acceleration)
 
     def on_gyroscope_data(self, myo, timestamp, gyroscope):
+        if gyroscope[0]>80:
+            GAME.running=False
         show_output('gyroscope', gyroscope)
 
     def on_unlock(self, myo, timestamp):
@@ -215,11 +222,10 @@ hub.run(3000, Listener())
 
 
 def game_loop():
-    running = True
-    while running:
+    while GAME.running:
         for event in pygame.event.get():
             if event.type == QUIT:
-                running = False 
+                GAME.running = False 
         pygame.display.update()
         clock.tick(60)
 
