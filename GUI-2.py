@@ -99,6 +99,9 @@ def game_intro():
 class State:
 	def __init__(self):
 		self.level=1
+		self.speed=1
+		self.bulletPercentage=40
+		self.log_health=3
 GAME=State()
 class EnnemyShip:
 	number_of_ships=[0,0,0]
@@ -107,26 +110,26 @@ class EnnemyShip:
 
 
 	def __init__(self):
+		self.row=EnnemyShip.number_of_rows
 		self.direction=1
 		self.y=20+EnnemyShip.ennemy_width*EnnemyShip.number_of_rows
 		self.x=10+EnnemyShip.ennemy_width*EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]
 		EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]+=1
 		self.number=EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]
-		print self.number
 		if EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]>=1:
 			self.x+=5*EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]
 		if EnnemyShip.number_of_rows>1:
 			self.y+=5*EnnemyShip.number_of_rows
 	def move(self,dist):
 		if self.direction==1: 
-			self.x += self.direction*dist*GAME.level
-	  		if self.x >= display_width-64 and self.number==EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]:
+			self.x += self.direction*dist*GAME.speed
+	  		if self.x >= display_width-64 and self.number==EnnemyShip.number_of_ships[self.row]:
 	  			self.direction = -1
-	  		elif self.x >= display_width-64-(EnnemyShip.ennemy_width+5)*(EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]-self.number):
+	  		elif self.x >= display_width-64-(EnnemyShip.ennemy_width+5)*(EnnemyShip.number_of_ships[self.row]-self.number):
 	  			self.direction = -1
 
 		if self.direction == -1:
-			self.x += self.direction*dist*GAME.level
+			self.x += self.direction*dist*GAME.speed
 			if self.x <= 0 and self.number==1:
 	  			self.direction = 1
 	  		elif self.x <= 0+(EnnemyShip.ennemy_width+5)*(self.number-1):
@@ -249,13 +252,13 @@ def game_loop():
 			print_life(25,display_height-50)
 
 		#log
-		if log_hit < 3:
+		if log_hit < GAME.log_health:
 			print_log(logx,logy)
 		else:
 			logx=display_width
 			logy=display_height
 		
-		if log_hit1 < 3:
+		if log_hit1 < GAME.log_health:
 			print_log(logx1,logy1)
 		else:
 			logx1=display_width
@@ -269,7 +272,7 @@ def game_loop():
 			for z in Ennemies:
 				z.move_y()
 
-		if random.randint(0,40)==6:
+		if random.randint(0,GAME.bulletPercentage)==6:
 			index=random.randint(0,len(Ennemies)-1)
 			bulletsEnnemy.append(Bullet(Ennemies[index].x,Ennemies[index].y))
 
@@ -299,15 +302,27 @@ def game_loop():
 					Ennemies.remove(ennemies)
 			if rect_collision(bullets.x, bullets.y, logx, logy, bubbles_width, 250):
 				log_hit += 1
-				bulletsUser.remove(bullets)
+				try:
+					bulletsUser.remove(bullets)
+				except Exception:
+					print "ExceptionI"
 			if rect_collision(bullets.x, bullets.y, logx1, logy1, bubbles_width, 250):
 				log_hit1 += 1
-				bulletsUser.remove(bullets)
-
+				try:
+					bulletsUser.remove(bullets)
+				except Exception:
+					print "ExceptionI"
 
 
 		if len(Ennemies)<1:
 			GAME.level+=1
+			logx = display_width/8
+			logy = display_height-250
+			log_hit = 0
+
+			logx1 = 3 * display_width/5
+			logy1 = display_height-250
+			log_hit1 = 0
 			EnnemyShip.number_of_ships=[0,0,0]
 			EnnemyShip.number_of_rows=0
 			one=EnnemyShip()
@@ -315,7 +330,24 @@ def game_loop():
 			three=EnnemyShip()
 			four=EnnemyShip()
 			Ennemies=[one,two,three,four]
-			if GAME.level%2==1:
+			if GAME.level>=5:
+				EnnemyShip.number_of_rows+=1
+				Ennemies.append(EnnemyShip())
+				Ennemies.append(EnnemyShip())
+			if GAME.level>=8:
+				Ennemies.append(EnnemyShip())
+				Ennemies.append(EnnemyShip())
+			if GAME.level>=11:
+				EnnemyShip.number_of_rows+=1
+				Ennemies.append(EnnemyShip())
+				Ennemies.append(EnnemyShip())
+			if GAME.level>=14:
+				Ennemies.append(EnnemyShip())
+				Ennemies.append(EnnemyShip())
+			if(GAME.level%3==0 and GAME.bulletPercentage>30):
+				GAME.bulletPercentage-=2
+			elif(GAME.level%3==1 and GAME.log_health<6):
+				GAME.log_health+=1
 				
 			ennemy_y_counter=0
 		if user_lives<1:
