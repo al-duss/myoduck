@@ -31,6 +31,10 @@ background = pygame.image.load("assets/bg.png")
 background = pygame.transform.scale(background, (display_width, display_height))
 duck_vader = pygame.image.load("assets/vader.png")
 duck_vader = pygame.transform.scale(duck_vader, (300,300))
+log = pygame.image.load("assets/log.png")
+log = pygame.transform.scale(log, (250,50))
+life = pygame.image.load("assets/life.png")
+life = pygame.transform.scale(life, (35,45))
 
 def hit():
 	# message_display("You've been hit!")
@@ -153,12 +157,23 @@ def print_e_shot(x,y):
 def print_vader(x,y):
 	screen.blit(duck_vader,(x,y))
 
+def print_log(x,y):
+	screen.blit(log,(x,y))
+
+def print_life(x,y):
+	screen.blit(life,(x,y))
+
 def print_background():
 	screen.blit(background, (0,0))
 
 def collision(rx, ry, x, y,r_width, ennemy_width):
 	if (rx < x + ennemy_width and rx > x) or (rx+r_width<x+ennemy_width and rx+r_width>x) or (rx+r_width/2<x+ennemy_width and rx+r_width/2>x):
 		if ry < y + ennemy_width and ry > y:
+			return True
+
+def rect_collision(rx, ry, x, y,r_width, ennemy_width):
+	if (rx < x + ennemy_width and rx > x) or (rx+r_width<x+ennemy_width and rx+r_width>x) or (rx+r_width/2<x+ennemy_width and rx+r_width/2>x):
+		if ry == y:
 			return True
 
 def game_loop():
@@ -186,6 +201,15 @@ def game_loop():
 	dis = 5
 	user_lives=3
 	ennemy_y_counter=0
+
+	logx = display_width/8
+	logy = display_height-250
+	log_hit = 0
+
+	logx1 = 3 * display_width/5
+	logy1 = display_height-250
+	log_hit1 = 0
+
 	game_intro()
 
 	while running:
@@ -211,12 +235,31 @@ def game_loop():
 		#Shots from ship
 		
 		#Shots
-		
-
-		
 
 		# screen.fill(background_colour)
 		print_background()
+
+
+		#display lives
+		if user_lives == 3:
+			print_life(125,display_height-50)
+		if user_lives >= 2:
+			print_life(75,display_height-50)
+		if user_lives >= 1:
+			print_life(25,display_height-50)
+
+		#log
+		if log_hit < 3:
+			print_log(logx,logy)
+		else:
+			logx=display_width
+			logy=display_height
+		
+		if log_hit1 < 3:
+			print_log(logx1,logy1)
+		else:
+			logx1=display_width
+			logy1=display_height
 
 		for z in Ennemies:
 			ennemy_y_counter+=1
@@ -254,6 +297,13 @@ def game_loop():
 			for ennemies in Ennemies:
 				if collision(bullets.x, bullets.y, ennemies.x, ennemies.y,bubbles_width, EnnemyShip.ennemy_width):
 					Ennemies.remove(ennemies)
+			if rect_collision(bullets.x, bullets.y, logx, logy, bubbles_width, 250):
+				log_hit += 1
+				bulletsUser.remove(bullets)
+			if rect_collision(bullets.x, bullets.y, logx1, logy1, bubbles_width, 250):
+				log_hit1 += 1
+				bulletsUser.remove(bullets)
+
 
 
 		if len(Ennemies)<1:

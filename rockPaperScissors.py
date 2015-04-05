@@ -1,15 +1,54 @@
+import pygame
+from pygame.locals import *
+import sys
+import os
+import time
 import myo
 from myo.lowlevel import pose_t, stream_emg
 from myo.six import print_
 import random
 
+pygame.init()
 myo.init()
+background_colour = (255,255,255)
+black = (0,0,0)
+display_width = 800
+display_height = 500
+screen = pygame.display.set_mode((display_width, display_height))
+pygame.display.set_caption('Tutorial 1')
+screen.fill(background_colour)
+clock = pygame.time.Clock()
+
+def write_message(text, me, opponent):
+    screen.fill(background_colour)
+    largeText = pygame.font.Font('freesansbold.ttf',45)
+    smallText = pygame.font.Font('freesansbold.ttf',30)
+    TextSurf, TextRect = text_objects(text, largeText)
+    TextSurf2, TextRect2 = text_objects("Me: "+str(GAME.me)+", Opponent: " +str(GAME.opponent), smallText)
+    TextSurf3, TextRect3 = text_objects("Duck, Paper, Scissors", largeText)
+    TextRect.center = ((display_width/2),(display_height/2))
+    TextRect2.center = ((display_width/2),(display_height/2 + 150))
+    TextRect3.center = ((display_width/2),40)
+    screen.blit(TextSurf, TextRect)
+    screen.blit(TextSurf2, TextRect2)
+    screen.blit(TextSurf3, TextRect3)
+    pygame.display.update()
+    clock.tick(15)
+
+def text_objects(text, font):
+    textSurface = font.render(text, 1, black)
+    return textSurface, textSurface.get_rect()
 
 SHOW_OUTPUT_CHANCE = 0.01
 r"""
 There can be a lot of output from certain data like acceleration and orientation.
 This parameter controls the percent of times that data is shown.
 """
+class State:
+    def __init__(self):
+        self.me = 0
+        self.opponent = 0
+GAME=State()
 
 class Listener(myo.DeviceListener):
     # return False from any method to stop the Hub
@@ -41,7 +80,7 @@ class Listener(myo.DeviceListener):
         print_('on_disconnect')
 
     def on_pose(self, myo, timestamp, pose):
-        if pose == pose_t.double_tap:
+        if pose == pose_t.wave_in:
             #print_('on_pose', pose)
             print_("You chose Scissors!")
             opponentChoice(1,myo)
@@ -81,54 +120,111 @@ class Listener(myo.DeviceListener):
     def on_emg(self, myo, timestamp, emg):
         show_output('emg', emg)
 
+c_scissors = pygame.image.load("assets/computer_scissors.jpg")
+c_scissors = pygame.transform.scale(c_scissors, (200, 200))
+c_paper = pygame.image.load("assets/computer_paper.jpg")
+c_paper = pygame.transform.scale(c_paper, (200, 200))
+c_rock = pygame.image.load("assets/computer_rock.jpg")
+c_rock = pygame.transform.scale(c_rock, (200, 200))
+scissors = pygame.image.load("assets/human_scissors.png")
+scissors = pygame.transform.scale(scissors, (150, 150))
+paper = pygame.image.load("assets/human_paper.png")
+paper = pygame.transform.scale(paper, (150, 150))
+rock = pygame.image.load("assets/human_rock.png")
+rock = pygame.transform.scale(rock, (150, 150))
+
+def print_paper(x,y):
+    screen.blit(paper, (x,y))
+    pygame.display.update()
+def print_scissors(x,y):
+    screen.blit(scissors, (x,y))
+    pygame.display.update()
+def print_rock(x,y):
+    screen.blit(rock, (x,y))
+    pygame.display.update()
+def print_c_paper(x,y):
+    screen.blit(c_paper, (x,y))
+    pygame.display.update()
+def print_c_scissors(x,y):
+    screen.blit(c_scissors, (x,y))
+    pygame.display.update()
+def print_c_rock(x,y):
+    screen.blit(c_rock, (x,y))
+    pygame.display.update()
 def opponentChoice(userChoice,myo):
     choice=random.randint(1,3)
     if choice==1:
         print_("Opponent chose Scissors!")
         if choice==userChoice:
-            print_("Tie!\n")
+            write_message("Tie!", GAME.me, GAME.opponent)
+            print_c_scissors(display_width-250, 150)
+            print_scissors(75, 150)
         elif 2==userChoice:
-            print_("You Lose!\n")
+            GAME.opponent+=1
+            write_message("You Lose!", GAME.me, GAME.opponent)
+            print_c_scissors(display_width-250, 150)
+            print_paper(75, 150)
             myo.vibrate('long')
         else:
-            print_("You Win!\n")
+            GAME.me+=1
+            write_message("You Win!", GAME.me, GAME.opponent)
+            print_c_scissors(display_width-250, 150)
+            print_rock(75, 150)
     elif choice==2:
         print_("Opponent chose Paper!")
         if choice==userChoice:
-            print_("Tie!\n")
+            write_message("Tie!", GAME.me, GAME.opponent)
+            print_c_paper(display_width-250, 150)
+            print_paper(75, 150)
         elif 1==userChoice:
-            print_("You Win!\n")
+            GAME.me+=1
+            write_message("You Win!", GAME.me, GAME.opponent)
+            print_c_paper(display_width-250, 150)
+            print_scissors(75, 150)
         else:
-            print_("You Lose!\n")
+            GAME.opponent+=1
+            write_message("You Lose!", GAME.me, GAME.opponent)
+            print_c_paper(display_width-250, 150)
+            print_rock(75, 150)
             myo.vibrate('long')
     else:
         print_("Opoonent chose Rock!")
         if choice==userChoice:
-            print_("Tie!\n")
+            write_message("Tie!", GAME.me, GAME.opponent)
+            print_c_rock(display_width-250, 150)
+            print_rock(75, 150)
         elif 2==userChoice:
-            print_("You Win!\n")
+            GAME.me+=1
+            write_message("You Win!", GAME.me, GAME.opponent)
+            print_c_rock(display_width-250, 150)
+            print_paper(75, 150)
         else:
-            print_("You Lose!\n")
+            GAME.opponent+=1
+            write_message("You Lose!", GAME.me, GAME.opponent)
+            print_c_rock(display_width-250, 150)
+            print_scissors(75, 150)
             myo.vibrate('long')
 
 def show_output(message, data):
     '''if random.random() < SHOW_OUTPUT_CHANCE: 
         print_(message + ':' + str(data))'''
 
-def main():
-    hub = myo.Hub()
-    hub.set_locking_policy(myo.locking_policy.none)
-    hub.run(1000, Listener())
+hub = myo.Hub()
+hub.set_locking_policy(myo.locking_policy.none)
+hub.run(3000, Listener())
 
-    # Listen to keyboard interrupts and stop the
-    # hub in that case.
-    try:
-        while hub.running:
-            myo.time.sleep(0.2)
-    except KeyboardInterrupt:
-        print_("Quitting ...")
-        hub.stop(True)
 
-if __name__ == '__main__':
-    main()
+def game_loop():
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                running = False 
+        pygame.display.update()
+        clock.tick(60)
 
+
+game_loop()
+pygame.quit()
+hub.stop(True)
+quit()
