@@ -10,7 +10,7 @@ display_height = 500
 black = (0,0,0)
 
 screen = pygame.display.set_mode((display_width, display_height))
-pygame.display.set_caption('Ducky Strikes Back')
+pygame.display.set_caption('The Myo Ducks')
 screen.fill(background_colour)
 clock = pygame.time.Clock()
 
@@ -27,20 +27,28 @@ def game_intro():
 				pygame.quit()
 				quit()
 			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_s:
-					os.system("python GUI-2.py")
+				if event.key == pygame.K_k:
+					os.system("GUI-2.py")
 				if event.key == pygame.K_m:
-					#os.system("")
+					os.system("myoDucks.py")
+				if event.key == pygame.K_d:
+					os.system("rockPaperScissors.py")
 
 		screen.fill(background_colour)
-		largeText = pygame.font.Font('freesansbold.ttf',80)
-		smallText = pygame.font.Font('freesansbold.ttf',45)
-		TextSurf, TextRect = text_objects("Ducky Strikes Back", largeText)
-		TextSurf1, TextRect1 = text_objects("M for myo, S for regular", smallText)
-		TextRect.center = ((display_width/2),(display_height/2))
-		TextRect1.center = ((display_width/2),(display_height/2 + 150))
+		largeText = pygame.font.Font('freesansbold.ttf',45)
+		smallText = pygame.font.Font('freesansbold.ttf',30)
+		TextSurf, TextRect = text_objects("The Myo Ducks", largeText)
+		TextSurf2, TextRect2 = text_objects("Ducky Strikes Back: Press M for Myo, K for Keyboard", smallText)
+		TextSurf3, TextRect3 = text_objects("Duck, Paper Scissors: Press D", smallText)
+		TextRect.center = ((display_width/2),40)
+		TextRect2.center = ((display_width/2),(display_height/2 + 100))
+		TextRect3.center = ((display_width/2),(display_height/2 + 150))
+		duck = pygame.image.load("assets/duck.png")
+		duck = pygame.transform.scale(duck, (150, 150))
+		screen.blit(duck, ((display_width/2-80),150))
 		screen.blit(TextSurf, TextRect)
-		screen.blit(TextSurf1, TextRect1)
+		screen.blit(TextSurf2, TextRect2)
+		screen.blit(TextSurf3, TextRect3)
 		pygame.display.update()
 		clock.tick(15)
 
