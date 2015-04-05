@@ -30,6 +30,8 @@ ennemy = pygame.image.load("assets/fox.png")
 ennemy = pygame.transform.scale(ennemy, (64, 64))
 player = pygame.image.load("assets/duck.png")
 player = pygame.transform.scale(player, (64, 64))
+iplayer = pygame.image.load("assets/invincible_duck.png")
+iplayer = pygame.transform.scale(iplayer,(64,64))
 p_shot = pygame.image.load("assets/bubbles.png")
 p_shot = pygame.transform.scale(p_shot,(70,70))
 e_shot = pygame.image.load("assets/fireball.png")
@@ -112,6 +114,11 @@ def message_display(text):
 	time.sleep(2)
 	game_loop()
 
+def invicibility(time):
+	if time <= 0.4:
+		return True
+	else:
+		return False
 
 class State:
 	def __init__(self):
@@ -123,10 +130,12 @@ class State:
 		self.over=True
 		self.level=1
 		self.speed=1
-		self.bulletPercentage=40
+		self.bulletPercentage=100
 		self.log_health=3
 		self.win=False
 		self.next_level=False
+		self.invicible = False
+		self.startTime = 0
 GAME=State()
 
 class EnnemyShip:
@@ -218,9 +227,9 @@ class Listener(myo.DeviceListener):
         show_output('acceleration', acceleration)
 
     def on_gyroscope_data(self, myo, timestamp, gyroscope):
-    	if gyroscope[0]>15:
+    	if gyroscope[0]>50:
     		move_left()
-    	if gyroscope[0]<-15:
+    	if gyroscope[0]<-50:
     		move_right()
         show_output('gyroscope', gyroscope)
 
@@ -247,6 +256,9 @@ def print_ennemy(x,y):
 
 def print_player(x,y):
 	screen.blit(player, (x,y))
+def print_iplayer(x,y):
+	screen.blit(iplayer, (x,y))
+
 
 def print_shot(x,y):
 	screen.blit(p_shot, (x,y))
@@ -374,7 +386,12 @@ def game_loop():
 				bulletsEnnemy.remove(bullets)
 				GAME.myo.vibrate('long')
 
-				user_lives-=1
+				endTime=time.time()
+				if not invicibility(endTime-GAME.startTime):
+					user_lives-=1
+					GAME.startTime = time.time()
+				if endTime-GAME.startTime >= 0.4:
+					GAME.startTime = endTime
 			if bullets.y <= display_height:
 				print_e_shot(bullets.x,bullets.y)
 			else:
@@ -470,7 +487,11 @@ def game_loop():
 			running=False
 
 
-		print_player(GAME.x,GAME.y)
+		endTime = time.time()
+		if endTime-GAME.startTime >= 0.4:
+			print_player(GAME.x,GAME.y)
+		else:
+			print_iplayer(GAME.x,GAME.y)
 		pygame.display.update()
 		clock.tick(60)	
 		

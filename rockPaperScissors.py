@@ -23,7 +23,7 @@ def write_message(text, me, opponent):
     screen.fill(background_colour)
     largeText = pygame.font.Font('freesansbold.ttf',45)
     smallText = pygame.font.Font('freesansbold.ttf',30)
-    smallerText = pygame.fond.Font('freesansbold.ttf', 20)
+    smallerText = pygame.font.Font('freesansbold.ttf', 20)
     TextSurf, TextRect = text_objects(text, largeText)
     TextSurf2, TextRect2 = text_objects("Me: "+str(GAME.me)+", Opponent: " +str(GAME.opponent), smallText)
     TextSurf3, TextRect3 = text_objects("Duck, Paper, Scissors", largeText)
@@ -31,7 +31,7 @@ def write_message(text, me, opponent):
     TextRect.center = ((display_width/2),(display_height/2))
     TextRect2.center = ((display_width/2),(display_height/2 + 150))
     TextRect3.center = ((display_width/2),40)
-    TextRect4.center = (30,display_height-20)
+    TextRect4.center = (80,display_height-20)
     screen.blit(TextSurf, TextRect)
     screen.blit(TextSurf2, TextRect2)
     screen.blit(TextSurf3, TextRect3)
@@ -108,7 +108,7 @@ class Listener(myo.DeviceListener):
         show_output('acceleration', acceleration)
 
     def on_gyroscope_data(self, myo, timestamp, gyroscope):
-        if gyroscope[0]>80:
+        if gyroscope[0]>500:
             GAME.running=False
         show_output('gyroscope', gyroscope)
 
