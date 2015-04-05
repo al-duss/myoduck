@@ -23,6 +23,8 @@ ennemy = pygame.image.load("assets/fox.png")
 ennemy = pygame.transform.scale(ennemy, (64, 64))
 player = pygame.image.load("assets/duck.png")
 player = pygame.transform.scale(player, (64, 64))
+iplayer = pygame.image.load("assets/invincible_duck.png")
+iplayer = pygame.transform.scale(iplayer,(64,64))
 p_shot = pygame.image.load("assets/bubbles.png")
 p_shot = pygame.transform.scale(p_shot,(70,70))
 e_shot = pygame.image.load("assets/fireball.png")
@@ -105,6 +107,11 @@ def message_display(text):
 	time.sleep(2)
 	game_loop()
 
+def invicibility(time):
+	if time <= 0.4:
+		return True
+	else:
+		return False
 
 class State:
 	def __init__(self):
@@ -112,6 +119,8 @@ class State:
 		self.speed=1
 		self.bulletPercentage=40
 		self.log_health=3
+		self.invicible = False
+		self.startTime = 0
 GAME=State()
 class EnnemyShip:
 	number_of_ships=[0,0,0]
@@ -160,6 +169,9 @@ def print_ennemy(x,y):
 
 def print_player(x,y):
 	screen.blit(player, (x,y))
+
+def print_iplayer(x,y):
+	screen.blit(iplayer, (x,y))
 
 def print_shot(x,y):
 	screen.blit(p_shot, (x,y))
@@ -227,7 +239,6 @@ def game_loop():
 	logy1 = display_height-250
 	log_hit1 = 0
 
-
 	while running:
 		#Ship
 		for event in pygame.event.get():
@@ -255,9 +266,9 @@ def game_loop():
 		# screen.fill(background_colour)
 		print_background()
 
+		#time since last hit
+		endTime=time.time()
 
-
-		#display lives
 		
 		#log
 		if log_hit < GAME.log_health:
@@ -292,7 +303,12 @@ def game_loop():
 			bullets.y+=dis
 			if collision(bullets.x, bullets.y, x, y,fireball_width, EnnemyShip.ennemy_width):
 				bulletsEnnemy.remove(bullets)
-				user_lives-=1
+				endTime=time.time()
+				if not invicibility(endTime-GAME.startTime):
+					user_lives-=1
+					GAME.startTime = time.time()
+				if endTime-GAME.startTime >= 0.4:
+					GAME.startTime = endTime
 			if bullets.y <= display_height:
 				print_e_shot(bullets.x,bullets.y)
 			else:
@@ -387,9 +403,11 @@ def game_loop():
 			gameOver()
 			running=False
 
-
-		
-		print_player(x,y)
+		endTime = time.time()
+		if endTime-GAME.startTime >= 0.4:
+			print_player(x,y)
+		else:
+			print_iplayer(x,y)
 		pygame.display.update()
 		clock.tick(60)	
 		
