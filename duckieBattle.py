@@ -2,6 +2,9 @@ import pygame, sys, time
 from pygame.locals import *
 import random as r
 from enum import Enum
+import myo
+from myo.lowlevel import pose_t, stream_emg
+from myo.six import print_
 
 class Status(Enum):
 	wait = 1
@@ -42,7 +45,9 @@ display_width = 800
 display_height = 500
 
 pygame.init()
+myo.init()
 screen = pygame.display.set_mode((display_width, display_height))
+pygame.display.set_caption('DUCKY BATTLES')
 
 clock = pygame.time.Clock()
 
@@ -58,11 +63,20 @@ def main():
 	selectedTarget = p2.units[1]
 	status = Status.attackSelect
 
+	hub = myo.Hub()
+	hub.set_locking_policy(myo.locking_policy.none)
+	hub.run(500, Listener())
 	while True:
 		if p1.units[0].hp < 1 and p1.units[1].hp < 1 and p1.units[2].hp < 1:
-			showGameOverScreen()
+			print "DEFEAT"
+			hub.stop(True)
+			pygame.quit()
+			quit()
 		if p2.units[0].hp < 1 and p2.units[1].hp < 1 and p2.units[2].hp < 1:
-			showVictoryScreen()
+			print "VICTORY"
+			hub.stop(True)
+			pygame.quit()
+			quit()
 
 		checkForQuit()
 		for event in pygame.event.get():
@@ -101,9 +115,6 @@ def main():
 
 		if status is Status.attackSelect:
 			index = p1.units.index(selectedUnit)
-			while selectedUnit.hp < 1:
-				index = (index+1)%3
-				selectedUnit = p1.units[index]
 			if index == 0:
 				if selectedAttack is p1.units[0].elem:
 					print_ring(162,375)
@@ -139,19 +150,30 @@ def main():
 				print_circle(580,40)
 
 		elif status is Status.wait:
+			if p2.units[0].hp < 1 and p2.units[1].hp < 1 and p2.units[2].hp < 1:
+				print "VICTORY"
+				pygame.quit()
+				quit()
 			i = r.randint(0,2)
 			while p2.units[i].hp < 1:
-				i = r.randint(0,2)
+				i = (i +1)%3
 			e = r.randint(1,3)
 			t = r.randint(0,2)
 			while p1.units[i].hp < 1:
-				t = r.randint(0,2)
+				t = (t+1)%3
 			if e == 1:
 				attack(p2.units[i].elem,p1.units[t])
 			elif e == 2:
 				attack(p2.units[i].att1, p1.units[t])
 			elif e == 3:
 				attack(p2.units[i].att2, p1.units[t])
+			index = p1.units.index(selectedUnit)
+			index = (index+1)%3
+			selectedUnit = p1.units[index]
+			while selectedUnit.hp < 1:
+				index = (index+1)%3
+				selectedUnit = p1.units[index]
+			selectedAttack = selectedUnit.elem
 			status = Status.attackSelect
 		pygame.display.update()
 
@@ -357,6 +379,7 @@ def game_intro():
 		pygame.display.update()
 		clock.tick(15)
 '''
+
 def checkForQuit():
 	for event in pygame.event.get((QUIT, KEYUP)): # event handling loop
 		if event.type == QUIT or (event.type == KEYUP and event.key == K_ESCAPE):
@@ -399,11 +422,13 @@ def accept():
 	global status, selectedTarget,selectedAttack, selectedUnit, p1
 	if status is Status.targetSelect:
 		attack(selectedAttack,selectedTarget)
+		'''
 		index = p1.units.index(selectedUnit)
 		index = (index+1)%3
 		while p1.units[index].hp < 1:
 			index = (index+1)%3
 		selectedUnit = p1.units[index]
+		'''
 		status = Status.wait
 	elif status is Status.attackSelect:
 		status = Status.targetSelect
@@ -412,6 +437,73 @@ def goBack():
 	global status
 	if status is Status.targetSelect:
 		status = Status.attackSelect
+
+class Listener(myo.DeviceListener):
+    # return False from any method to stop the Hub
+
+    def on_connect(self, myo, timestamp):
+        print_("Connected to Myo")
+        myo.vibrate('short')
+        myo.request_rssi()
+
+    def on_rssi(self, myo, timestamp, rssi):
+        #print_("RSSI:", rssi)
+        print_('');
+
+    def on_event(self, event):
+        r""" Called before any of the event callbacks. """
+
+    def on_event_finished(self, event):
+        r""" Called after the respective event callbacks have been
+        invoked. This method is *always* triggered, even if one of
+        the callbacks requested the stop of the Hub. """
+
+    def on_pair(self, myo, timestamp):
+        print_('Paired')
+        print_("If you don't see any responses to your movements, try re-running the program or making sure the Myo works with Myo Connect (from Thalmic Labs).")
+        print_("Double tap enables EMG.")
+        print_("Spreading fingers disables EMG.\n")
+
+    def on_disconnect(self, myo, timestamp):
+        print_('on_disconnect')
+
+    def on_pose(self, myo, timestamp, pose):
+        if pose == pose_t.fist:
+        	accept()
+        if pose == pose_t.wave_in:
+        	goLeft()
+        if pose == pose_t.wave_out:
+        	goRight()
+        if pose == pose_t.fingers_spread:
+        	goBack()
+               
+    def on_orientation_data(self, myo, timestamp, orientation):
+        show_output('orientation', orientation)
+
+    def on_accelerometor_data(self, myo, timestamp, acceleration):
+        show_output('acceleration', acceleration)
+
+    def on_gyroscope_data(self, myo, timestamp, gyroscope):
+        show_output('gyroscope', gyroscope)
+
+    def on_unlock(self, myo, timestamp):
+        print_('unlocked')
+
+    def on_lock(self, myo, timestamp):
+        print_('locked')
+
+    def on_sync(self, myo, timestamp, arm, x_direction):
+        print_('synced', arm, x_direction)
+
+    def on_unsync(self, myo, timestamp):
+        print_('unsynced')
+        
+    def on_emg(self, myo, timestamp, emg):
+        show_output('emg', emg)
+
+def show_output(message, data):
+    '''if random.random() < 0.1: 
+        print_(message + ':' + str(data))'''
 
 if __name__ == '__main__':
 	main()
