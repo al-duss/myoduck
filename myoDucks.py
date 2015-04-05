@@ -1,3 +1,7 @@
+import myo
+from myo.lowlevel import pose_t, stream_emg
+from myo.six import print_
+import random
 import pygame
 from pygame.locals import *
 import sys
@@ -5,13 +9,16 @@ import time
 import random
 
 pygame.init()
+myo.init()
+
+
 background_colour = (255,255,255)
 black = (0,0,0)
 display_width = 800
 display_height = 500
 bubbles_width=70
 fireball_width=55
-
+fire=False
 
 
 screen = pygame.display.set_mode((display_width, display_height))
@@ -29,34 +36,14 @@ e_shot = pygame.image.load("assets/fireball.png")
 e_shot = pygame.transform.scale(e_shot,(55,90))
 background = pygame.image.load("assets/bg.png")
 background = pygame.transform.scale(background, (display_width, display_height))
-duck_vader = pygame.image.load("assets/vader.png")
-duck_vader = pygame.transform.scale(duck_vader, (300,300))
 
-def hit():
-	# message_display("You've been hit!")
-	font = pygame.font.Font(None, 36)		
-	text = font.render("Hello There!", 1, (10, 10, 10))
-	textpos = text.get_rect()
-	textpos.centerx = screen.get_rect().centerx
-	screen.blit(text, textpos)
 def gameOver():
-	screen.fill(background_colour)
 	font = pygame.font.Font(None, 36)		
 	text = font.render("Game Over!", 1, (10, 10, 10))
 	textpos = text.get_rect()
 	textpos.centerx = screen.get_rect().centerx
 	screen.blit(text, textpos)
-	print_vader(250,100)
-	pygame.display.update()
-	over = True
-	while over:
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
-				pygame.quit()
-				quit()
-			if event.type == pygame.KEYDOWN:	
-				over = False
-
+	time.sleep(15)
 def text_objects(text, font):
 	textSurface = font.render(text, 1, black)
 	return textSurface, textSurface.get_rect()
@@ -92,6 +79,14 @@ def game_intro():
 		screen.blit(TextSurf1, TextRect1)
 		pygame.display.update()
 		clock.tick(15)
+class State:
+	def __init__(self):
+		self.bulletsUser=[]
+		self.dist_ship=0
+		self.x=display_width/2
+		self.y=display_height-70
+		self.myo=0
+GAME=State()
 
 class EnnemyShip:
 	number_of_ships=0
@@ -124,7 +119,71 @@ class Bullet:
 	def __init__(self,x,y):
 		self.x=x
 		self.y=y
+class Listener(myo.DeviceListener):
+    # return False from any method to stop the Hub
 
+    def on_connect(self, myo, timestamp):
+        print_("Connected to Myo")
+        myo.vibrate('short')
+        myo.request_rssi()
+        GAME.myo=myo
+
+    def on_rssi(self, myo, timestamp, rssi):
+        #print_("RSSI:", rssi)
+        print_('');
+
+    def on_event(self, event):
+        r""" Called before any of the event callbacks. """
+
+    def on_event_finished(self, event):
+        r""" Called after the respective event callbacks have been
+        invoked. This method is *always* triggered, even if one of
+        the callbacks requested the stop of the Hub. """
+
+    def on_pair(self, myo, timestamp):
+        print_('Paired')
+        print_("If you don't see any responses to your movements, try re-running the program or making sure the Myo works with Myo Connect (from Thalmic Labs).")
+        print_("Double tap enables EMG.")
+        print_("Spreading fingers disables EMG.\n")
+
+    def on_disconnect(self, myo, timestamp):
+        print_('on_disconnect')
+
+    def on_pose(self, myo, timestamp, pose):
+        if pose == pose_t.fist:
+        	fire()
+               
+    def on_orientation_data(self, myo, timestamp, orientation):
+        show_output('orientation', orientation)
+
+    def on_accelerometor_data(self, myo, timestamp, acceleration):
+        show_output('acceleration', acceleration)
+
+    def on_gyroscope_data(self, myo, timestamp, gyroscope):
+    	if gyroscope[0]>15:
+    		move_left()
+    	if gyroscope[0]<-15:
+    		move_right()
+        show_output('gyroscope', gyroscope)
+
+    def on_unlock(self, myo, timestamp):
+        print_('unlocked')
+
+    def on_lock(self, myo, timestamp):
+        print_('locked')
+
+    def on_sync(self, myo, timestamp, arm, x_direction):
+        print_('synced', arm, x_direction)
+
+    def on_unsync(self, myo, timestamp):
+        print_('unsynced')
+        
+    def on_emg(self, myo, timestamp, emg):
+        show_output('emg', emg)
+
+def show_output(message, data):
+    '''if random.random() < 0.1: 
+        print_(message + ':' + str(data))'''
 def print_ennemy(x,y):
 	screen.blit(ennemy, (x,y))
 
@@ -137,23 +196,28 @@ def print_shot(x,y):
 def print_e_shot(x,y):
 	screen.blit(e_shot, (x,y))
 
-def print_vader(x,y):
-	screen.blit(duck_vader,(x,y))
-
 def print_background():
 	screen.blit(background, (0,0))
 
 def collision(rx, ry, x, y,r_width, ennemy_width):
-	if (rx < x + ennemy_width and rx > x) or (rx+r_width<x+ennemy_width and rx+r_width>x) or (rx+r_width/2<x+ennemy_width and rx+r_width/2>x):
-		if ry < y + ennemy_width and ry > y:
+	if ((rx <= x + ennemy_width) and (rx >= x)) or ((rx+r_width<=x+ennemy_width) and (rx+r_width >= x)) or ((rx+r_width/2<=x+ennemy_width) and (rx+r_width/2>=x)):
+		if ry <= y + ennemy_width and ry >= y:
 			return True
+def fire():
+	if(len(GAME.bulletsUser)<3):
+		GAME.bulletsUser.append(Bullet(GAME.x,GAME.y))
+def move_left():
+	GAME.dist_ship = -5
+def move_right():
+	GAME.dist_ship = 5
+hub = myo.Hub()
+hub.set_locking_policy(myo.locking_policy.none)
+hub.run(500, Listener())
 
 def game_loop():
-	x=display_width/2
-	y=display_height-70
+	
 	dist = 0
 	direction = 1
-	dist_ship = 0
 
 
 	running = True;
@@ -164,35 +228,21 @@ def game_loop():
 
 	Ennemies=[one,two,three,four]
 	bulletsEnnemy=[]
-	bulletsUser=[]
 	shot_counter =0
 	running = True
 	shot = False
 	onscreen = False
 	dis = 5
 	user_lives=3
-
 	game_intro()
-
+	
 	while running:
 		#Ship
 		for event in pygame.event.get():
 			if event.type == QUIT:
 				running = False
-			if event.type == KEYDOWN:
-				if event.key == pygame.K_LEFT:
-					dist_ship = -5
-				elif event.key == pygame.K_RIGHT:
-					dist_ship = 5
-				elif event.key == pygame.K_SPACE:
-					if(len(bulletsUser)<3):
-						bulletsUser.append(Bullet(x,y))
-			if event.type == pygame.KEYUP:
-				if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-					dist_ship = 0
-
-		if (x+dist_ship) >= 0 and (x+dist_ship) <= (display_width - EnnemyShip.ennemy_width) :
-			x += dist_ship	
+		if (GAME.x+GAME.dist_ship) >= 0 and (GAME.x+GAME.dist_ship) <= (display_width - EnnemyShip.ennemy_width) :
+			GAME.x += GAME.dist_ship	
 
 		#Shots from ship
 		
@@ -212,25 +262,26 @@ def game_loop():
 
 		for bullets in bulletsEnnemy:
 			bullets.y+=dis
-			if collision(bullets.x, bullets.y, x, y,fireball_width, EnnemyShip.ennemy_width):
-				hit()
+			if collision(bullets.x, bullets.y, GAME.x, GAME.y,fireball_width, EnnemyShip.ennemy_width):
 				bulletsEnnemy.remove(bullets)
+				GAME.myo.vibrate('long')
+
 				user_lives-=1
 			if bullets.y <= display_height:
 				print_e_shot(bullets.x,bullets.y)
 			else:
 				bulletsEnnemy.remove(bullets)
 		
-		for bullets in bulletsUser:
+		for bullets in GAME.bulletsUser:
 			bullets.y-=dis
 			if bullets.y >= 0:
 				print_shot(bullets.x,bullets.y)
 			else:
-				bulletsUser.remove(bullets)
+				GAME.bulletsUser.remove(bullets)
 			for bulletsOpp in bulletsEnnemy:
 				if collision(bullets.x, bullets.y, bulletsOpp.x, bulletsOpp.y, bubbles_width, fireball_width):
 					bulletsEnnemy.remove(bulletsOpp)
-					bulletsUser.remove(bullets)
+					GAME.bulletsUser.remove(bullets)
 			for ennemies in Ennemies:
 				if collision(bullets.x, bullets.y, ennemies.x, ennemies.y,bubbles_width, EnnemyShip.ennemy_width):
 					Ennemies.remove(ennemies)
@@ -238,16 +289,18 @@ def game_loop():
 
 		
 		if(len(Ennemies)<1 or user_lives<1):
-			screen.fill(background_colour)
-			gameOver()
 			running=False
 
 
-		print_player(x,y)
+		print_player(GAME.x,GAME.y)
 		pygame.display.update()
 		clock.tick(60)	
 		
 game_loop()
+
+gameOver()
+hub.stop(True)
+
 pygame.quit()
 quit()
 		

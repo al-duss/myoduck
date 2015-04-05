@@ -16,6 +16,9 @@ SILVER=(230,230,250)
 display_width = 800
 display_height = 500
 
+background = pygame.image.load("assets/bg.png")
+background = pygame.transform.scale(background, (display_width, display_height))
+
 class Status(Enum):
 	wait = 1
 	unitSelect = 2
@@ -94,6 +97,9 @@ def attack(attack, target):
 		dmg = dmg*2
 	receiver.hp = receiver.hp - dmg
 
+def print_background():
+	screen.blit(background, (0,0))
+
 def game_intro():
 
 	intro = True
@@ -163,9 +169,9 @@ def accept():
 		status = Status.wait
 
 def goBack():
-	if status is Status.attackSelect
+	if status is Status.attackSelect:
 		status = Status.unitSelect
-	if status is Status.targetSelect
+	if status is Status.targetSelect:
 		status = Status.attackSelect
 
 def runGame():
