@@ -62,9 +62,9 @@ def gameOver():
 				over = False
 def continue_next_level(user_lives):
 	font = pygame.font.Font(None, 36)		
-	text = font.render("Congratulations! Press any key to continue to next level!", 1, (10, 10, 10))																												
+	text = font.render("Congratulations! Shoot to continue to next level!", 1, (10, 10, 10))																												
 	print_background()
-	screen.blit(text, (60,display_height/2))
+	screen.blit(text, (80,display_height/2))
 	if user_lives == 3:
 		print_life(125,display_height-50)
 	if user_lives >= 2:

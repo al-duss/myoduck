@@ -15,7 +15,7 @@ black = (0,0,0)
 display_width = 800
 display_height = 500
 screen = pygame.display.set_mode((display_width, display_height))
-pygame.display.set_caption('Tutorial 1')
+pygame.display.set_caption('Duck, Paper, Scissors')
 screen.fill(background_colour)
 clock = pygame.time.Clock()
 
@@ -48,6 +48,7 @@ class State:
     def __init__(self):
         self.me = 0
         self.opponent = 0
+        self.running=True
 GAME=State()
 
 class Listener(myo.DeviceListener):
@@ -103,6 +104,8 @@ class Listener(myo.DeviceListener):
         show_output('acceleration', acceleration)
 
     def on_gyroscope_data(self, myo, timestamp, gyroscope):
+        if gyroscope[0]>80:
+            GAME.running=False
         show_output('gyroscope', gyroscope)
 
     def on_unlock(self, myo, timestamp):
@@ -215,11 +218,10 @@ hub.run(3000, Listener())
 
 
 def game_loop():
-    running = True
-    while running:
+    while GAME.running:
         for event in pygame.event.get():
             if event.type == QUIT:
-                running = False 
+                GAME.running = False 
         pygame.display.update()
         clock.tick(60)
 
