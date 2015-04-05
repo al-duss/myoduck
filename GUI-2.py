@@ -33,6 +33,8 @@ duck_vader = pygame.image.load("assets/vader.png")
 duck_vader = pygame.transform.scale(duck_vader, (300,300))
 log = pygame.image.load("assets/log.png")
 log = pygame.transform.scale(log, (250,50))
+life = pygame.image.load("assets/life.png")
+life = pygame.transform.scale(life, (35,45))
 
 def hit():
 	# message_display("You've been hit!")
@@ -145,6 +147,9 @@ def print_vader(x,y):
 def print_log(x,y):
 	screen.blit(log,(x,y))
 
+def print_life(x,y):
+	screen.blit(life,(x,y))
+
 def print_background():
 	screen.blit(background, (0,0))
 
@@ -218,6 +223,14 @@ def game_loop():
 
 		# screen.fill(background_colour)
 		print_background()
+
+		#display lives
+		if user_lives == 3:
+			print_life(125,display_height-50)
+		if user_lives >= 2:
+			print_life(75,display_height-50)
+		if user_lives >= 1:
+			print_life(25,display_height-50)
 
 		#log
 		if log_hit < 3:
