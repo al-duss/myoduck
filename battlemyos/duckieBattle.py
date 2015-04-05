@@ -3,15 +3,8 @@ from pygame.locals import *
 import random as r
 from enum import Enum
 
-DISPLAYSURF = pygame.display.set_mode((500,500))
-pygame.display.set_caption('DUCKY BATTLE')
 
-WINDOWWIDTH = 640
-WINDOWHEIGHT = 480
-FPS = 30
-BLANK = None
-BASICFONTSIZE=20
-
+BLACK = (0,0,0)
 WHITE = (255,255,255)
 BLUE=(0,0,128)
 GREEN=(0,128,0)
@@ -20,56 +13,9 @@ BROWN=(139,69,19)
 YELLOW=(255,255,0)
 LIGHTBLUE=(240,248,255)
 SILVER=(230,230,250)
+display_width = 800
+display_height = 500
 
-LEFT='left'
-RIGHT='right'
-
-def main():
-	global FPSCLOCK, DISPLAYSURF, BASICFONT, GAMESTATE
-
-	pygame.init()
-	FPSCLOCK = pygame.time.Clock()
-	DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH,WINDOWHEIGHT))
-	pygame.display.set_caption('DUCKY BATTLE')
-	fontObj = pygame.font.Font('freesansbold.ttf', BASICFONTSIZE)
-
-	game_intro()
-	while True:
-		runGame()
-		showGameOverScreen()
-
-def runGame():
-	p1 = Player() #Initialize the players with their units
-	p2 = Player()
-	createPlayers(p1,p2)
-	selectedUnit = p1.unit[1]
-	while True:
-		if p1.units[0].hp < 1 and p1.units[1].hp < 1 and p1.units[2].hp < 1:
-			showGameOverScreen()
-		if p2.units[0].hp < 1 and p2.units[1].hp < 1 and p2.units[2].hp < 1:
-			showVictoryScreen()
-
-		checkForQuit()
-		for event in pygame.event.get():
-			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_LEFT:
-					goLeft()
-				if event.key == pygame.K_RIGHT:
-					goRight()
-				if event.key == pygame.K_SPACE:
-					accept()
-				if event.key == pygame.K_LCTRL:
-					goBack()
-'''
-while True:
-	DISPLAYSURF.fill(WHITE)
-	DISPLAYSURF.blit(textSurfaceObj, textRectObj)
-	for event in pygame.event.get():
-		if event.type == QUIT:
-			pygame.quit()
-			sys.exit()
-		pygame.display.update()
-'''
 class Status(Enum):
 	wait = 1
 	unitSelect = 2
@@ -102,6 +48,20 @@ class Player:
 
 	def add_unit(self, unit):
 		self.units.append(unit)
+
+pygame.init()
+screen = pygame.display.set_mode((display_width, display_height))
+pygame.display.set_caption('DUCKY BATTLE')
+screen.fill(WHITE)
+clock = pygame.time.Clock()
+status = Status.wait
+selectedUnit = Unit(1,1,1,1) #placeholders to initialize global variables
+selectedAttack = Type.fire
+selectedTarget = Unit(1,1,1,1)
+
+def text_objects(text, font):
+	textSurface = font.render(text, 1, BLACK)
+	return textSurface, textSurface.get_rect()
 
 def createUnit(elem):
 	a1 = r.randint(1,7)
@@ -145,10 +105,10 @@ def game_intro():
 			if event.type == pygame.KEYDOWN:	
 				intro = False
 
-		screen.fill(background_colour)
+		screen.fill(WHITE)
 		largeText = pygame.font.Font('freesansbold.ttf',80)
 		smallText = pygame.font.Font('freesansbold.ttf',45)
-		TextSurf, TextRect = text_objects("Ducky Strikes Back", largeText)
+		TextSurf, TextRect = text_objects("BATTLE DUCKIES", largeText)
 		TextSurf1, TextRect1 = text_objects("Press Any Key To Continue...", smallText)
 		TextRect.center = ((display_width/2),(display_height/2))
 		TextRect1.center = ((display_width/2),(display_height/2 + 150))
@@ -163,5 +123,76 @@ def checkForQuit():
 			pygame.quit()
 			sys.exit()
 
-if __name__ == '__main__':
-	main()
+def goLeft():
+	if status is Status.unitSelect:
+		index = p1.units.index(selectedUnit)
+		selectedUnit = p1.units[(index-1)%3]
+	if status is Status.attackSelect:
+		if selectedAttack is selectedUnit.elem:
+			selectedAttack = selectedUnit.att1
+		if selectedAttack is selectedUnit.att1:
+			selectedAttack = selectedUnit.att2
+		if selectedAttack is selectedUnit.att2:
+			selectedAttack = selectedUnit.elem
+	if status is Status.targetSelect:
+		index = p2.units.index(selectedUnit)
+		selectedUnit = p2.units[(index-1)%3]
+
+def goRight():
+	if status is Status.unitSelect:
+		index = p1.units.index(selectedUnit)
+		selectedUnit = p1.units[(index+1)%3]
+	if status is Status.attackSelect:
+		if selectedAttack is selectedUnit.elem:
+			selectedAttack = selectedUnit.att2
+		if selectedAttack is selectedUnit.att1:
+			selectedAttack = selectedUnit.elem
+		if selectedAttack is selectedUnit.att2:
+			selectedAttack = selectedUnit.att1
+	if status is Status.targetSelect:
+		index = p2.units.index(selectedTarget)
+		selectedTarget = p2.units[(index+1)%3]
+
+def accept():
+	if status is Status.unitSelect:
+		status = Status.attackSelect
+	if status is Status.attackSelect:
+		status = Status.targetSelect
+	if status is Status.targetSelect:
+		attack(selectedAttack,targetSelect)
+		status = Status.wait
+
+def goBack():
+	if status is Status.attackSelect
+		status = Status.unitSelect
+	if status is Status.targetSelect
+		status = Status.attackSelect
+
+def runGame():
+	game_intro()
+	p1 = Player() #Initialize the players with their units
+	p2 = Player()
+	createPlayers(p1,p2)
+	selectedUnit = p1.units[1]
+	status = Status.unitSelect
+	while True:
+		if p1.units[0].hp < 1 and p1.units[1].hp < 1 and p1.units[2].hp < 1:
+			showGameOverScreen()
+		if p2.units[0].hp < 1 and p2.units[1].hp < 1 and p2.units[2].hp < 1:
+			showVictoryScreen()
+
+		checkForQuit()
+		for event in pygame.event.get():
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_LEFT:
+					goLeft()
+				if event.key == pygame.K_RIGHT:
+					goRight()
+				if event.key == pygame.K_SPACE:
+					accept()
+				if event.key == pygame.K_LCTRL:
+					goBack()
+
+runGame()
+pygame.quit()
+quit()
