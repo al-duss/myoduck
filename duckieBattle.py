@@ -76,6 +76,7 @@ def main():
 				if event.key == pygame.K_LCTRL:
 					goBack()
 		print_background()
+		
 		if p2.units[0].hp > 0:
 			printDuck(p2.units[0],160,50)
 		if p2.units[1].hp > 0:
@@ -98,9 +99,69 @@ def main():
 			printElem(p1.units[2].elem,612,380)
 			printElem(p1.units[2].att2,664,380)
 
+		if status is Status.attackSelect:
+			index = p1.units.index(selectedUnit)
+			while selectedUnit.hp < 1:
+				index = (index+1)%3
+				selectedUnit = p1.units[index]
+			if index == 0:
+				if selectedAttack is p1.units[0].elem:
+					print_ring(162,375)
+				if selectedAttack is p1.units[0].att1:
+					print_ring(110,375)
+				if selectedAttack is p1.units[0].att2:
+					print_ring(214,375)
+			elif index == 1:
+				if selectedAttack is p1.units[1].elem:
+					print_ring(382,375)
+				if selectedAttack is p1.units[1].att1:
+					print_ring(330,375)
+				if selectedAttack is p1.units[1].att2:
+					print_ring(434,375)
+			elif index == 2:
+				if selectedAttack is p1.units[2].elem:
+					print_ring(602,375)
+				if selectedAttack is p1.units[2].att1:
+					print_ring(550,375)
+				if selectedAttack is p1.units[2].att2:
+					print_ring(654,375)
+
+		elif status is Status.targetSelect:
+			index = p2.units.index(selectedTarget)
+			while selectedTarget.hp < 1:
+				index = (index+1)%3
+				selectedTarget = p2.units[index]
+			if index == 0:
+				print_circle(140,40)
+			if index == 1:
+				print_circle(360,40)
+			if index == 2:
+				print_circle(580,40)
+
+		elif status is Status.wait:
+			i = r.randint(0,2)
+			while p2.units[i].hp < 1:
+				i = r.randint(0,2)
+			e = r.randint(1,3)
+			t = r.randint(0,2)
+			while p1.units[i].hp < 1:
+				t = r.randint(0,2)
+			if e == 1:
+				attack(p2.units[i].elem,p1.units[t])
+			elif e == 2:
+				attack(p2.units[i].att1, p1.units[t])
+			elif e == 3:
+				attack(p2.units[i].att2, p1.units[t])
+			status = Status.attackSelect
+		pygame.display.update()
+
 
 background = pygame.image.load("assets/wasteland.png")
 background = pygame.transform.scale(background, (display_width, display_height))
+circle = pygame.image.load("assets/circle.png")
+circle= pygame.transform.scale(circle, (100,100))
+ring = pygame.image.load("assets/circle.png")
+ring= pygame.transform.scale(ring, (55,55))
 
 fireduck = pygame.image.load("assets/fire_duck.png")
 fireduck= pygame.transform.scale(fireduck, (64,64))
@@ -200,78 +261,76 @@ def attack(attack, target):
 	  ):
 		dmg = dmg*2
 	target.hp = target.hp - dmg
+	print typeName(target.elem) + " took " + str(dmg) + " damage."
+	if target.hp < 1:
+		print typeName(target.elem) + " was defeated."
+
+def typeName(t):
+	if t is Type.fire:
+		return "Fireduck"
+	if t is Type.water:
+		return "Waterduck"
+	if t is Type.grass:
+		return "Grassduck"
+	if t is Type.rock:
+		return "Rockduck"
+	if t is Type.electric:
+		return "Electricduck"
+	if t is Type.ice:
+		return "Iceduck"
+	if t is Type.air:
+		return "Airduck"
+
+def print_circle(x,y):
+	screen.blit(circle,(x,y))
+
+def print_ring(x,y):
+	screen.blit(ring,(x,y))
 
 def print_background():
 	screen.blit(background, (0,0))
-	pygame.display.update()
 
 def print_fireduck(x,y):
 	screen.blit(fireduck, (x,y))
 
-
 def print_waterduck(x,y):
 	screen.blit(waterduck, (x,y))
 
-
 def print_grassduck(x,y):
 	screen.blit(grassduck, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 def print_rockduck(x,y):
 	screen.blit(rockduck, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 def print_elecduck(x,y):
 	screen.blit(elecduck, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 def print_iceduck(x,y):
 	screen.blit(iceduck, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 def print_airduck(x,y):
 	screen.blit(airduck, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 def print_fireball(x,y):
 	screen.blit(fireball, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 def print_bubbles(x,y):
 	screen.blit(bubbles, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 def print_leaf(x,y):
 	screen.blit(leaf, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 def print_rock(x,y):
 	screen.blit(rock, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 def print_lightning(x,y):
 	screen.blit(lightning, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 def print_ice(x,y):
 	screen.blit(ice, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 def print_wind(x,y):
 	screen.blit(wind, (x,y))
-	pygame.display.update()
-	clock.tick(FPS)
 
 
 '''
@@ -305,39 +364,48 @@ def checkForQuit():
 			sys.exit()
 
 def goLeft():
-	global status, selectedUnit, selectedAttack
+	global status, selectedUnit, selectedAttack, selectedTarget
 	if status is Status.attackSelect:
 		if selectedAttack is selectedUnit.elem:
 			selectedAttack = selectedUnit.att1
-		if selectedAttack is selectedUnit.att1:
+		elif selectedAttack is selectedUnit.att1:
 			selectedAttack = selectedUnit.att2
-		if selectedAttack is selectedUnit.att2:
+		elif selectedAttack is selectedUnit.att2:
 			selectedAttack = selectedUnit.elem
-	if status is Status.targetSelect:
-		index = p2.units.index(selectedUnit)
-		selectedUnit = p2.units[(index-1)%3]
+	elif status is Status.targetSelect:
+		index = p2.units.index(selectedTarget)
+		selectedTarget = p2.units[(index-1)%3]
+		while selectedUnit.hp < 1:
+				index = (index-1)%3
+				selectedTarget = p2.units[index]
 
 def goRight():
-	global status, selectedUnit, selectedAttack
+	global status, selectedUnit, selectedAttack, selectedTarget
 	if status is Status.attackSelect:
 		if selectedAttack is selectedUnit.elem:
 			selectedAttack = selectedUnit.att2
-		if selectedAttack is selectedUnit.att1:
+		elif selectedAttack is selectedUnit.att1:
 			selectedAttack = selectedUnit.elem
-		if selectedAttack is selectedUnit.att2:
+		elif selectedAttack is selectedUnit.att2:
 			selectedAttack = selectedUnit.att1
-	if status is Status.targetSelect:
+	elif status is Status.targetSelect:
 		index = p2.units.index(selectedTarget)
 		selectedTarget = p2.units[(index+1)%3]
+		while selectedUnit.hp < 1:
+				index = (index+1)%3
+				selectedTarget = p2.units[index]
 
 def accept():
 	global status, selectedTarget,selectedAttack, selectedUnit, p1
 	if status is Status.targetSelect:
 		attack(selectedAttack,selectedTarget)
-		status = Status.wait
 		index = p1.units.index(selectedUnit)
-		selectedUnit = p1.units[(index+1)%3]
-	if status is Status.attackSelect:
+		index = (index+1)%3
+		while p1.units[index].hp < 1:
+			index = (index+1)%3
+		selectedUnit = p1.units[index]
+		status = Status.wait
+	elif status is Status.attackSelect:
 		status = Status.targetSelect
 
 def goBack():
