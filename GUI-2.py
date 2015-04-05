@@ -176,6 +176,11 @@ def rect_collision(rx, ry, x, y,r_width, ennemy_width):
 		if ry == y:
 			return True
 
+def display_level(level):
+	font = pygame.font.Font(None, 24)		
+	text = font.render("Level: " + str(level), 1, (10, 10, 10))
+	screen.blit(text, (display_width-80,18))
+
 def game_loop():
 	x=display_width/2
 	y=display_height-70
@@ -238,6 +243,7 @@ def game_loop():
 
 		# screen.fill(background_colour)
 		print_background()
+
 
 
 		#display lives
@@ -316,14 +322,14 @@ def game_loop():
 			four=EnnemyShip()
 			Ennemies=[one,two,three,four]
 			if GAME.level%2==1:
-				
-			ennemy_y_counter=0
+				ennemy_y_counter=0
 		if user_lives<1:
 			screen.fill(background_colour)
 			gameOver()
 			running=False
 
 
+		display_level(GAME.level)
 		print_player(x,y)
 		pygame.display.update()
 		clock.tick(60)	
