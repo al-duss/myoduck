@@ -30,7 +30,7 @@ def game_intro():
 				if event.key == pygame.K_s:
 					os.system("python GUI-2.py")
 				if event.key == pygame.K_m:
-					#os.system("")
+					os.system("python myoDucks.py")
 
 		screen.fill(background_colour)
 		largeText = pygame.font.Font('freesansbold.ttf',80)
