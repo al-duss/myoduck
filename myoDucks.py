@@ -36,14 +36,26 @@ e_shot = pygame.image.load("assets/fireball.png")
 e_shot = pygame.transform.scale(e_shot,(55,90))
 background = pygame.image.load("assets/bg.png")
 background = pygame.transform.scale(background, (display_width, display_height))
+duck_vader = pygame.image.load("assets/vader.png")
+duck_vader = pygame.transform.scale(duck_vader, (300,300))
 
 def gameOver():
+	GAME.over=True
+	screen.fill(background_colour)
 	font = pygame.font.Font(None, 36)		
 	text = font.render("Game Over!", 1, (10, 10, 10))
 	textpos = text.get_rect()
 	textpos.centerx = screen.get_rect().centerx
 	screen.blit(text, textpos)
-	time.sleep(15)
+	print_vader(250,100)
+	pygame.display.update()
+	while GAME.over:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				quit()
+			if event.type == pygame.KEYDOWN:	
+				over = False
 def text_objects(text, font):
 	textSurface = font.render(text, 1, black)
 	return textSurface, textSurface.get_rect()
@@ -59,14 +71,15 @@ def message_display(text):
 
 def game_intro():
 
-	intro = True
-	while intro:
+	
+	while GAME.intro:
+		print "hit"
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				pygame.quit()
 				quit()
 			if event.type == pygame.KEYDOWN:	
-				intro = False
+				GAME.intro = False
 
 		screen.fill(background_colour)
 		largeText = pygame.font.Font('freesansbold.ttf',80)
@@ -86,20 +99,24 @@ class State:
 		self.x=display_width/2
 		self.y=display_height-70
 		self.myo=0
+		self.over=True
 GAME=State()
 
 class EnnemyShip:
 	number_of_ships=0
 	ennemy_width = 64
-	y=20
+	number_of_rows = 1
 
 	def __init__(self):
 		self.direction=1
+		self.y=20+EnnemyShip.ennemy_width*(EnnemyShip.number_of_rows-1)
 		self.x=10+EnnemyShip.ennemy_width*EnnemyShip.number_of_ships
 		EnnemyShip.number_of_ships+=1
 		self.number=EnnemyShip.number_of_ships
 		if EnnemyShip.number_of_ships>=1:
 			self.x+=5*EnnemyShip.number_of_ships
+		if EnnemyShip.number_of_rows>1:
+			self.y+=5*EnnemyShip.number_of_rows
 	def move(self,dist):
 		if self.direction==1: 
 			dist = 5
@@ -151,7 +168,10 @@ class Listener(myo.DeviceListener):
 
     def on_pose(self, myo, timestamp, pose):
         if pose == pose_t.fist:
-        	fire()
+        	if GAME.over:
+        		GAME.over=False
+        	else:
+        		fire()
                
     def on_orientation_data(self, myo, timestamp, orientation):
         show_output('orientation', orientation)
@@ -195,7 +215,8 @@ def print_shot(x,y):
 
 def print_e_shot(x,y):
 	screen.blit(e_shot, (x,y))
-
+def print_vader(x,y):
+	screen.blit(duck_vader,(x,y))
 def print_background():
 	screen.blit(background, (0,0))
 
@@ -234,7 +255,7 @@ def game_loop():
 	onscreen = False
 	dis = 5
 	user_lives=3
-	game_intro()
+	#game_intro()
 	
 	while running:
 		#Ship
@@ -255,10 +276,11 @@ def game_loop():
 		print_background()
 		for z in Ennemies:
 			z.move(dist)
-			print_ennemy(z.x,EnnemyShip.y)
+			print_ennemy(z.x,z.y)
 
 		if random.randint(0,40)==6:
-			bulletsEnnemy.append(Bullet(Ennemies[random.randint(0,len(Ennemies)-1)].x,EnnemyShip.y))
+			index=random.randint(0,len(Ennemies)-1)
+			bulletsEnnemy.append(Bullet(Ennemies[index].x,Ennemies[index].y))
 
 		for bullets in bulletsEnnemy:
 			bullets.y+=dis
@@ -289,6 +311,8 @@ def game_loop():
 
 		
 		if(len(Ennemies)<1 or user_lives<1):
+			screen.fill(background_colour)
+			gameOver()
 			running=False
 
 
@@ -298,7 +322,6 @@ def game_loop():
 		
 game_loop()
 
-gameOver()
 hub.stop(True)
 
 pygame.quit()

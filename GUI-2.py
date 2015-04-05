@@ -96,33 +96,46 @@ def game_intro():
 		screen.blit(TextSurf1, TextRect1)
 		pygame.display.update()
 		clock.tick(15)
-
+class State:
+	def __init__(self):
+		self.level=1
+GAME=State()
 class EnnemyShip:
-	number_of_ships=0
+	number_of_ships=[0,0,0]
 	ennemy_width = 64
-	y=20
+	number_of_rows = 0
+
 
 	def __init__(self):
 		self.direction=1
-		self.x=10+EnnemyShip.ennemy_width*EnnemyShip.number_of_ships
-		EnnemyShip.number_of_ships+=1
-		self.number=EnnemyShip.number_of_ships
-		if EnnemyShip.number_of_ships>=1:
-			self.x+=5*EnnemyShip.number_of_ships
+		self.y=20+EnnemyShip.ennemy_width*EnnemyShip.number_of_rows
+		self.x=10+EnnemyShip.ennemy_width*EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]
+		EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]+=1
+		self.number=EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]
+		print self.number
+		if EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]>=1:
+			self.x+=5*EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]
+		if EnnemyShip.number_of_rows>1:
+			self.y+=5*EnnemyShip.number_of_rows
 	def move(self,dist):
 		if self.direction==1: 
-			dist = 5
-			self.x += self.direction*dist
-	  		if self.x >= display_width-64 and self.number==EnnemyShip.number_of_ships:
+			self.x += self.direction*dist*GAME.level
+	  		if self.x >= display_width-64 and self.number==EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]:
 	  			self.direction = -1
-	  		elif self.x >= display_width-64-(EnnemyShip.ennemy_width+5)*(EnnemyShip.number_of_ships-self.number):
+	  		elif self.x >= display_width-64-(EnnemyShip.ennemy_width+5)*(EnnemyShip.number_of_ships[EnnemyShip.number_of_rows]-self.number):
 	  			self.direction = -1
 
 		if self.direction == -1:
-			dist = 5
-			self.x += self.direction*dist
+			self.x += self.direction*dist*GAME.level
+			if self.x <= 0 and self.number==1:
+	  			self.direction = 1
+	  		elif self.x <= 0+(EnnemyShip.ennemy_width+5)*(self.number-1):
+	  			self.direction = 1
+			'''self.x += self.direction*dist*GAME.level
 	  		if self.x <= (EnnemyShip.ennemy_width+5)*self.number-64:
-	  		  self.direction = 1
+	  		  self.direction = 1'''
+	def move_y(self):
+		self.y+=50
 class Bullet:
 
 	def __init__(self,x,y):
@@ -166,7 +179,7 @@ def rect_collision(rx, ry, x, y,r_width, ennemy_width):
 def game_loop():
 	x=display_width/2
 	y=display_height-70
-	dist = 0
+	dist = 5
 	direction = 1
 	dist_ship = 0
 
@@ -174,6 +187,7 @@ def game_loop():
 	running = True;
 	one= EnnemyShip()
 	two=EnnemyShip()
+	EnnemyShip.number_of_rows+=1
 	three=EnnemyShip()
 	four=EnnemyShip()
 
@@ -186,6 +200,7 @@ def game_loop():
 	onscreen = False
 	dis = 5
 	user_lives=3
+	ennemy_y_counter=0
 
 	logx = display_width/8
 	logy = display_height-250
@@ -224,6 +239,7 @@ def game_loop():
 		# screen.fill(background_colour)
 		print_background()
 
+
 		#display lives
 		if user_lives == 3:
 			print_life(125,display_height-50)
@@ -246,11 +262,16 @@ def game_loop():
 			logy1=display_height
 
 		for z in Ennemies:
+			ennemy_y_counter+=1
 			z.move(dist)
-			print_ennemy(z.x,EnnemyShip.y)
+			print_ennemy(z.x,z.y)
+		if ennemy_y_counter%2100==0:
+			for z in Ennemies:
+				z.move_y()
 
 		if random.randint(0,40)==6:
-			bulletsEnnemy.append(Bullet(Ennemies[random.randint(0,len(Ennemies)-1)].x,EnnemyShip.y))
+			index=random.randint(0,len(Ennemies)-1)
+			bulletsEnnemy.append(Bullet(Ennemies[index].x,Ennemies[index].y))
 
 		for bullets in bulletsEnnemy:
 			bullets.y+=dis
@@ -285,8 +306,19 @@ def game_loop():
 
 
 
-		
-		if(len(Ennemies)<1 or user_lives<1):
+		if len(Ennemies)<1:
+			GAME.level+=1
+			EnnemyShip.number_of_ships=[0,0,0]
+			EnnemyShip.number_of_rows=0
+			one=EnnemyShip()
+			two=EnnemyShip()
+			three=EnnemyShip()
+			four=EnnemyShip()
+			Ennemies=[one,two,three,four]
+			if GAME.level%2==1:
+				
+			ennemy_y_counter=0
+		if user_lives<1:
 			screen.fill(background_colour)
 			gameOver()
 			running=False
