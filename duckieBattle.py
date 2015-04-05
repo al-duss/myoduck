@@ -3,27 +3,10 @@ from pygame.locals import *
 import random as r
 from enum import Enum
 
-
-BLACK = (0,0,0)
-WHITE = (255,255,255)
-BLUE=(0,0,128)
-GREEN=(0,128,0)
-RED=(255,0,0)
-BROWN=(139,69,19)
-YELLOW=(255,255,0)
-LIGHTBLUE=(240,248,255)
-SILVER=(230,230,250)
-display_width = 800
-display_height = 500
-
-background = pygame.image.load("assets/bg.png")
-background = pygame.transform.scale(background, (display_width, display_height))
-
 class Status(Enum):
 	wait = 1
-	unitSelect = 2
-	attackSelect = 3
-	targetSelect = 4
+	attackSelect = 2
+	targetSelect = 3
 
 class Type(Enum):
 	fire = 1
@@ -52,19 +35,93 @@ class Player:
 	def add_unit(self, unit):
 		self.units.append(unit)
 
-pygame.init()
-screen = pygame.display.set_mode((display_width, display_height))
-pygame.display.set_caption('DUCKY BATTLE')
-screen.fill(WHITE)
-clock = pygame.time.Clock()
-status = Status.wait
-selectedUnit = Unit(1,1,1,1) #placeholders to initialize global variables
+BLACK = (0,0,0)
+WHITE = (255,255,255)
+display_width = 800
+display_height = 500
+
+def main():
+	global status, screen, selectedUnit, selectedAttack, selectedTarget, p1, p2
+	pygame.init()
+	screen = pygame.display.set_mode((display_width, display_height))
+	pygame.display.set_caption('DUCKY BATTLE')
+	screen.fill(WHITE)
+	clock = pygame.time.Clock()
+	status = Status.attackSelect # Placeholders
+	p1 = Player()
+	p2 = Player()
+	createPlayers(p1,p2)
+	selectedUnit = p1.units[0]
+	selectedAttack = p1.units[0].elem
+	selectedTarget = p2.units[1]
+	status = Status.attackSelect
+
+	while True:
+		print_background()
+		if p1.units[0].hp < 1 and p1.units[1].hp < 1 and p1.units[2].hp < 1:
+			showGameOverScreen()
+		if p2.units[0].hp < 1 and p2.units[1].hp < 1 and p2.units[2].hp < 1:
+			showVictoryScreen()
+
+		checkForQuit()
+		for event in pygame.event.get():
+			if event.ty
+			pe == pygame.KEYDOWN:
+				if event.key == pygame.K_LEFT:
+					goLeft()
+				if event.key == pygame.K_RIGHT:
+					goRight()
+				if event.key == pygame.K_SPACE:
+					accept()
+				if event.key == pygame.K_LCTRL:
+					goBack()
+
+'''
+status = Status.attackSelect #placeholders to initialize global variables
+selectedUnit = Unit(1,1,1,1) 
 selectedAttack = Type.fire
 selectedTarget = Unit(1,1,1,1)
+p1 = Player()
+p2 = Player()
+'''
+background = pygame.image.load("assets/bg.png")
+background = pygame.transform.scale(background, (display_width, display_height))
 
+fireduck = pygame.image.load("assets/fire_duck.png")
+fireduck= pygame.transform.scale(fireduck, (64,64))
+waterduck = pygame.image.load("assets/water_duck.png")
+waterduck= pygame.transform.scale(waterduck, (64,64))
+grassduck = pygame.image.load("assets/grass_duck.png")
+grassduck= pygame.transform.scale(grassduck, (64,64))
+rockduck = pygame.image.load("assets/rock_duck.png")
+rockduck= pygame.transform.scale(rockduck, (64,64))
+elecduck = pygame.image.load("assets/lightning_duck.png")
+elecduck= pygame.transform.scale(elecduck, (64,64))
+iceduck = pygame.image.load("assets/ice_duck.png")
+iceduck= pygame.transform.scale(iceduck, (64,64))
+airduck = pygame.image.load("assets/air_duck.png")
+airduck= pygame.transform.scale(airduck, (64,64))
+
+fireball = pygame.image.load("assets/fireball.png")
+fireball= pygame.transform.scale(fireball, (24,24))
+bubbles = pygame.image.load("assets/bubbles.png")
+bubbles= pygame.transform.scale(bubbles, (24,24))
+leaf = pygame.image.load("assets/leaf.png")
+leaf= pygame.transform.scale(leaf, (24,24))
+rock = pygame.image.load("assets/rock.png")
+rock= pygame.transform.scale(rock, (24,24))
+lightning = pygame.image.load("assets/lightning.png")
+lightning= pygame.transform.scale(lightning, (24,24))
+ice = pygame.image.load("assets/ice.png")
+ice= pygame.transform.scale(ice, (24,24))
+wind = pygame.image.load("assets/wind.png")
+wind= pygame.transform.scale(wind, (24,24))
+
+'''
 def text_objects(text, font):
 	textSurface = font.render(text, 1, BLACK)
 	return textSurface, textSurface.get_rect()
+'''
 
 def createUnit(elem):
 	a1 = r.randint(1,7)
@@ -95,11 +152,11 @@ def attack(attack, target):
 		(attack is Type.air and target.elem is (Type.electric or Type.fire))
 	  ):
 		dmg = dmg*2
-	receiver.hp = receiver.hp - dmg
+	target.hp = target.hp - dmg
 
 def print_background():
 	screen.blit(background, (0,0))
-
+'''
 def game_intro():
 
 	intro = True
@@ -122,7 +179,7 @@ def game_intro():
 		screen.blit(TextSurf1, TextRect1)
 		pygame.display.update()
 		clock.tick(15)
-
+'''
 def checkForQuit():
 	for event in pygame.event.get((QUIT, KEYUP)): # event handling loop
 		if event.type == QUIT or (event.type == KEYUP and event.key == K_ESCAPE):
@@ -130,9 +187,6 @@ def checkForQuit():
 			sys.exit()
 
 def goLeft():
-	if status is Status.unitSelect:
-		index = p1.units.index(selectedUnit)
-		selectedUnit = p1.units[(index-1)%3]
 	if status is Status.attackSelect:
 		if selectedAttack is selectedUnit.elem:
 			selectedAttack = selectedUnit.att1
@@ -145,9 +199,6 @@ def goLeft():
 		selectedUnit = p2.units[(index-1)%3]
 
 def goRight():
-	if status is Status.unitSelect:
-		index = p1.units.index(selectedUnit)
-		selectedUnit = p1.units[(index+1)%3]
 	if status is Status.attackSelect:
 		if selectedAttack is selectedUnit.elem:
 			selectedAttack = selectedUnit.att2
@@ -160,45 +211,24 @@ def goRight():
 		selectedTarget = p2.units[(index+1)%3]
 
 def accept():
-	if status is Status.unitSelect:
-		status = Status.attackSelect
+	global status, selectedTarget,selectedAttack, selectedUnit, p1
+	if status is Status.targetSelect:
+		attack(selectedAttack,selectedTarget)
+		status = Status.wait
+		index = p1.units.index(selectedUnit)
+		selectedUnit = p1.units[(index+1)%3]
 	if status is Status.attackSelect:
 		status = Status.targetSelect
-	if status is Status.targetSelect:
-		attack(selectedAttack,targetSelect)
-		status = Status.wait
 
 def goBack():
-	if status is Status.attackSelect:
-		status = Status.unitSelect
 	if status is Status.targetSelect:
 		status = Status.attackSelect
 
-def runGame():
-	game_intro()
-	p1 = Player() #Initialize the players with their units
-	p2 = Player()
-	createPlayers(p1,p2)
-	selectedUnit = p1.units[1]
-	status = Status.unitSelect
-	while True:
-		if p1.units[0].hp < 1 and p1.units[1].hp < 1 and p1.units[2].hp < 1:
-			showGameOverScreen()
-		if p2.units[0].hp < 1 and p2.units[1].hp < 1 and p2.units[2].hp < 1:
-			showVictoryScreen()
-
-		checkForQuit()
-		for event in pygame.event.get():
-			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_LEFT:
-					goLeft()
-				if event.key == pygame.K_RIGHT:
-					goRight()
-				if event.key == pygame.K_SPACE:
-					accept()
-				if event.key == pygame.K_LCTRL:
-					goBack()
-
+'''
 runGame()
 pygame.quit()
 quit()
+'''
+
+if __name__ == '__main__':
+	main()
