@@ -65,8 +65,7 @@ def main():
 
 		checkForQuit()
 		for event in pygame.event.get():
-			if event.ty
-			pe == pygame.KEYDOWN:
+			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_LEFT:
 					goLeft()
 				if event.key == pygame.K_RIGHT:
