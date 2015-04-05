@@ -29,6 +29,8 @@ e_shot = pygame.image.load("assets/fireball.png")
 e_shot = pygame.transform.scale(e_shot,(55,90))
 background = pygame.image.load("assets/bg.png")
 background = pygame.transform.scale(background, (display_width, display_height))
+duck_vader = pygame.image.load("assets/vader.png")
+duck_vader = pygame.transform.scale(duck_vader, (300,300))
 
 def hit():
 	# message_display("You've been hit!")
@@ -38,12 +40,23 @@ def hit():
 	textpos.centerx = screen.get_rect().centerx
 	screen.blit(text, textpos)
 def gameOver():
+	screen.fill(background_colour)
 	font = pygame.font.Font(None, 36)		
 	text = font.render("Game Over!", 1, (10, 10, 10))
 	textpos = text.get_rect()
 	textpos.centerx = screen.get_rect().centerx
 	screen.blit(text, textpos)
-	pygame.time.delay(5000)
+	print_vader(250,100)
+	pygame.display.update()
+	over = True
+	while over:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				quit()
+			if event.type == pygame.KEYDOWN:	
+				over = False
+
 def text_objects(text, font):
 	textSurface = font.render(text, 1, black)
 	return textSurface, textSurface.get_rect()
@@ -123,6 +136,9 @@ def print_shot(x,y):
 
 def print_e_shot(x,y):
 	screen.blit(e_shot, (x,y))
+
+def print_vader(x,y):
+	screen.blit(duck_vader,(x,y))
 
 def print_background():
 	screen.blit(background, (0,0))
@@ -222,6 +238,7 @@ def game_loop():
 
 		
 		if(len(Ennemies)<1 or user_lives<1):
+			screen.fill(background_colour)
 			gameOver()
 			running=False
 
